@@ -1,0 +1,72 @@
+# Wire format specification
+
+## Messages
+
+Each message starts at an 8-byte boundary to ensure proper alignment
+of all its members.
+The messages starts with an 8-byte header.
+* The lowest 4 bytes are the number of elements (nelem), i.e., how many
+  messages of the same type follows the header.
+* The next 2 bytes are the size in bytes (ssize) of the scalar part of the
+  message.
+* The next 2 bytes are the number of pointers (psize) the message has.
+
+After the header, the following component is repeated nelem times:
+* The next ssize bytes are the scalar part, which contains only scalars.
+* The next (4*psize) bytes are the pointers, which can point to other messages
+  in the same buffer.
+
+ssize should be rounded up according to the following rule:
+(4*psize + ssize) is a multiple of the message's alignment.
+* If psize = 0, then alignment = alignment of the scalar part, which is the
+  size of the largest scalar member.
+* If psize > 0, then alignment = min(4, alignment of the scalar part), because
+  the pointers must be aligned.
+
+When psize = 0 and nelem > 1, the above rule allows small pure scalars to be
+tightly packed.
+
+The padding space introduced by alignment is filled with zeros.
+
+## Scalars
+
+All scalars are stored in little-endian format.
+
+The offsets of each scalar are constructed as follows:
+* The offset of the first scalar is 0.
+* The offset of a new scalar is the smallest one that meets the size and
+  alignment requirements.  This may result in the scalar being put after
+  the last scalar and leaving padding spaces, or it may be put in padding
+  spaces that were previously created.
+
+The alignment of a single scalar equals its size.  For booleans, the alignment
+and size both equal to 1/8 byte (i.e., 1 bit) so that they can be tightly
+packed within the scalar part.  The final alignment and size of the scalar
+part is rounded up to bytes (no fractions).
+
+## Pointers
+
+A pointer is a 4-byte integer which indicates the offset (in units of 4 bytes)
+from its own.
+It is signed but negative values are disallowed, so messages can only refer
+to messages at higher addresses.  This prevents any loops from being created.
+A value of 0 means a null pointer, i.e., pointing to nothing.
+
+## Special types
+
+There is no dedicated wire format for the types discussed in this section.
+It's all about how the API interprets the data.
+
+Strings are treated as a sequence of bytes (ssize=1, psize=0), with a NUL
+character appended to its end for compatibility with C programs and libraries.
+As a result, nelem counts the NUL character on the wire, but it is deducted
+in the API.  From the user's perspective, the size of a string is the number
+of bytes excluding the NUL character.
+
+For serializing Unicode strings, UTF-8 is the chosen encoding.
+It's perfectly legal to have embedded NUL characters in the middle of the
+string because the wire format records the length.
+
+A vector of booleans is treated as a sequence of bytes but the bits are
+tightly packed (i.e., 8 values in a byte) and special API is provided for
+extracting the individual bits.
