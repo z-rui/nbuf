@@ -370,7 +370,7 @@ nbuf_put_bit(const struct nbuf_obj *r, size_t bit_offset, bool value)
 {
 	size_t i = bit_offset / CHAR_BIT;
 	size_t j = bit_offset % CHAR_BIT;
-	if (i >= p->ssize)
+	if (i >= r->ssize)
 		return;
 	size_t k = r->base + i;
 	assert(nbuf_bounds_check(r->buf, k, 1));
