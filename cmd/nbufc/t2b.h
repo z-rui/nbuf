@@ -1,6 +1,8 @@
 #ifndef T2B_H
 #define T2B_H
 
+#include "nbuf.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -36,5 +38,7 @@ struct schemaDesc {
 };
 
 extern struct schemaDesc schema;
+
+extern void nbuf_t2b(struct nbuf_buffer *buf);
 
 #endif  /* T2B_H */

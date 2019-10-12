@@ -1,0 +1,3 @@
+lex.yy.[ch]
+nbuf.tab.[ch]
+nbufc

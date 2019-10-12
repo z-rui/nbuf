@@ -15,7 +15,7 @@ struct lookup_entry {
 	void *data;
 };
 
-int
+static int
 lookup_cmp(const void *a, const void *b)
 {
 	return strcmp(
@@ -23,7 +23,7 @@ lookup_cmp(const void *a, const void *b)
 		((struct lookup_entry *) b)->name);
 }
 
-struct lookup_entry *
+static struct lookup_entry *
 lookup(struct lookup_entry *base, size_t n, const char *key)
 {
 	struct lookup_entry dummy = {key};
@@ -32,9 +32,9 @@ lookup(struct lookup_entry *base, size_t n, const char *key)
 
 #define MAX_TYPES 8192
 
-size_t enumnames, msgnames;
-size_t types_size = 12;
-struct lookup_entry types[MAX_TYPES] = {
+static size_t enumnames, msgnames;
+static size_t types_size = 12;
+static struct lookup_entry types[MAX_TYPES] = {
 	{"bool", nbuf_Kind_BOOL, 0},
 	{"int8", nbuf_Kind_INT, 1},
 	{"int16", nbuf_Kind_INT, 2},
@@ -57,7 +57,15 @@ struct lookup_entry types[MAX_TYPES] = {
 	fprintf(stderr, __VA_ARGS__); \
 } while (0)
 
-void
+#ifndef NDEBUG
+#define debug(...) do { \
+	fprintf(stderr, __VA_ARGS__); \
+} while (0)
+#else
+#define debug(...) do {} while (0)
+#endif
+
+static void
 makelookup()
 {
 	struct enumType *e;
@@ -98,21 +106,19 @@ out_of_memory:
 	die("too many types\n");
 }
 
-struct nbuf_buffer buffer;
-nbuf_Schema Schema;
+static nbuf_Schema Schema;
 
-void
-makeschema()
+static void
+makeschema(struct nbuf_buffer *buffer)
 {
-	nbuf_init_write(&buffer, NULL, 0);
-	Schema = nbuf_new_Schema(&buffer);
+	Schema = nbuf_new_Schema(buffer);
 	if (schema.pkgName != NULL)
 		nbuf_Schema_set_pkgName(&Schema, schema.pkgName, -1);
 	nbuf_Schema_init_enumTypes(&Schema, enumnames);
 	nbuf_Schema_init_msgTypes(&Schema, msgnames);
 }
 
-void
+static void
 outenums()
 {
 	struct enumType *e;
@@ -140,10 +146,10 @@ struct padding_space {
 	struct padding_space *next;
 };
 
-struct padding_space *pad_start, **pad_link;
-int pad_bit_offs;
+static struct padding_space *pad_start, **pad_link;
+static int pad_bit_offs;
 
-void
+static void
 clear_padding_spaces()
 {
 	struct padding_space *p, *next;
@@ -157,7 +163,7 @@ clear_padding_spaces()
 	pad_bit_offs = 0;
 }
 
-size_t
+static size_t
 find_padding_space(size_t size)
 {
 	bool pack_bool = false;
@@ -203,7 +209,7 @@ find_padding_space(size_t size)
 	return offset;
 }
 
-void
+static void
 add_padding_space(size_t offset, size_t size)
 {
 	struct padding_space *q = malloc(sizeof *q);
@@ -214,7 +220,7 @@ add_padding_space(size_t offset, size_t size)
 	pad_link = &q->next;
 }
 
-size_t
+static size_t
 calculate_offset(uint16_t *ssize, size_t size)
 {
 	size_t offset = find_padding_space(size);
@@ -236,7 +242,7 @@ calculate_offset(uint16_t *ssize, size_t size)
 	return offset;
 }
 
-void
+static void
 outmsgs()
 {
 	struct msgType *m;
@@ -258,7 +264,7 @@ outmsgs()
 			struct lookup_entry *ent;
 			size_t offset;
 
-			fprintf(stderr, "%s.%s\n", m->name, d->name);
+			debug("%s.%s\n", m->name, d->name);
 			ent = lookup(types, types_size, d->tname);
 			if (ent == NULL)
 				die("BUG: cannot find type \"%s\"\n",
@@ -304,7 +310,7 @@ outmsgs()
 	}
 }
 
-void
+static void
 cleanup()
 {
 	struct enumType *e;
@@ -335,25 +341,15 @@ cleanup()
 		next = m->next;
 		free(m);
 	}
-	nbuf_free(&buffer);
 }
 
+/* TODO: if this is made reentrant, move it to lib/ */
 void
-rawdump()
+nbuf_t2b(struct nbuf_buffer *buf)
 {
-	fwrite(buffer.base, buffer.len, 1, stdout);
-}
-
-extern int yyparse();
-
-int
-main()
-{
-	yyparse();
 	makelookup();
-	makeschema();
+	makeschema(buf);
 	outenums();
 	outmsgs();
-	rawdump();
 	cleanup();
 }
