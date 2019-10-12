@@ -223,7 +223,7 @@ static inline int64_t
 nbuf_get_int(const struct nbuf_obj *r, size_t byte_offset, size_t sz)
 {
 	assert(byte_offset % sz == 0);
-	return (byte_offset + sz < r->ssize) ?
+	return (byte_offset + sz <= r->ssize) ?
 		nbuf_read_int_safe(r->buf, r->base + byte_offset, sz) : 0;
 }
 
@@ -342,7 +342,7 @@ nbuf_put_int(const struct nbuf_obj *r, size_t byte_offset, size_t sz, uint64_t v
 {
 	assert(nbuf_writable(r->buf));
 	assert(byte_offset % sz == 0);
-	if (byte_offset + sz < r->ssize)
+	if (byte_offset + sz <= r->ssize)
 		nbuf_write_int_safe(r->buf, r->base + byte_offset, sz, v);
 }
 
