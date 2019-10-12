@@ -1,0 +1,34 @@
+
+enum Enum {
+	Apples = 0
+	Pears = 1
+	Bananas = 2
+}
+
+message Foo {
+	id: uint64  // 0
+	count: uint16  // 8
+	prefix: uint8  // 10
+	length: uint32  // 12
+}  // (16, 0)
+
+message Bar {
+	parent: Foo  // 0
+	time: int32  // 0
+	ratio: float  // 4
+	size: uint16  // 8
+}  // (12, 1)
+
+message FooBar {
+	sibling: Bar  // 0
+	name: string  // 1
+	rating: double  // 0
+	postfix: uint8  // 8
+}  // (12, 2)
+
+message FooBarContainer {
+	list: []FooBar  // 0
+	initialized: bool  // 0
+	fruit: Enum  // 2
+	location: string  // 1
+}  // (4, 2)
