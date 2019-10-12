@@ -60,6 +60,7 @@ typestr(nbuf_Kind kind, uint32_t tag1)
 		assert(0 && "unknown kind");
 		break;
 	}
+	return NULL;
 }
 
 void
