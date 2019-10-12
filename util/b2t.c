@@ -46,8 +46,7 @@ typestr(nbuf_Kind kind, uint32_t tag1)
 		sprintf(buf, "uint%d", tag1*8);
 		return buf;
 	case nbuf_Kind_FLOAT:
-		sprintf(buf, "float%d", tag1*8);
-		return buf;
+		return (tag1 == 4) ? "float" : "double";
 	case nbuf_Kind_STR:
 		return "string";
 	case nbuf_Kind_ENUM:

@@ -89,8 +89,7 @@ typestr(nbuf_Kind kind, uint32_t tag1)
 		sprintf(buf, "uint%d_t", tag1*8);
 		return buf;
 	case nbuf_Kind_FLOAT:
-		sprintf(buf, "float%d_t", tag1*8);
-		return buf;
+		return (tag1 == 4) ? "float" : "double";
 	case nbuf_Kind_STR:
 		return "const char *";
 	case nbuf_Kind_ENUM:
@@ -103,6 +102,7 @@ typestr(nbuf_Kind kind, uint32_t tag1)
 		assert(0 && "unknown kind");
 		break;
 	}
+	return NULL;
 }
 
 static const char *

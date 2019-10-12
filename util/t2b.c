@@ -44,8 +44,8 @@ struct lookup_entry types[MAX_TYPES] = {
 	{"uint16", nbuf_Kind_UINT, 2},
 	{"uint32", nbuf_Kind_UINT, 4},
 	{"uint64", nbuf_Kind_UINT, 8},
-	{"float32", nbuf_Kind_FLOAT, 4},
-	{"float64", nbuf_Kind_FLOAT, 8},
+	{"float", nbuf_Kind_FLOAT, 4},
+	{"double", nbuf_Kind_FLOAT, 8},
 	{"string", nbuf_Kind_STR, 1},
 };
 
