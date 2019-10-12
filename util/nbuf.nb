@@ -1,0 +1,42 @@
+package nbuf
+
+enum Kind {
+	BOOL = 0
+	ENUM = 1
+	INT = 2
+	UINT = 3
+	FLOAT = 4
+	STR = 5
+	PTR = 6
+}
+
+message Schema {
+	msgTypes: []MsgType  // 0
+	enumTypes: []EnumType  // 1
+	pkgName: string  // 2
+}  // (0, 3)
+
+message EnumDesc {
+	name: string  // 0
+	value: uint16  // 0
+}  // (4, 1)
+
+message EnumType {
+	name: string  // 0
+	values: []EnumDesc  // 1
+}  // (0, 2)
+
+message FieldDesc {
+	name: string  // 0
+	kind: Kind  // 0
+	list: bool  // 16
+	tag0: uint32  // 4
+	tag1: uint32  // 8
+}  // (12, 1)
+
+message MsgType {
+	name: string  // 0
+	fields: []FieldDesc  // 1
+	ssize: uint16  // 0
+	psize: uint16  // 2
+}  // (4, 2)
