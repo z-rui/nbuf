@@ -90,10 +90,12 @@ print_msgtype(nbuf_MsgType msgType)
 void
 print_schema()
 {
+	const char *pkgName;
 	size_t i, n;
 
-	printf("package %s\n",
-		nbuf_Schema_pkgName(&schema, NULL));
+	pkgName = nbuf_Schema_pkgName(&schema, &n);
+	if (n > 0)
+		printf("package %s\n", pkgName);
 	n = nbuf_Schema_enumTypes_size(&schema);
 	for (i = 0; i < n; i++) {
 		print_enum(nbuf_Schema_enumTypes(&schema, i));

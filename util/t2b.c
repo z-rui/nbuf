@@ -106,7 +106,8 @@ makeschema()
 {
 	nbuf_init_write(&buffer, NULL, 0);
 	Schema = nbuf_new_Schema(&buffer);
-	nbuf_Schema_set_pkgName(&Schema, schema.pkgName, -1);
+	if (schema.pkgName != NULL)
+		nbuf_Schema_set_pkgName(&Schema, schema.pkgName, -1);
 	nbuf_Schema_init_enumTypes(&Schema, enumnames);
 	nbuf_Schema_init_msgTypes(&Schema, msgnames);
 }

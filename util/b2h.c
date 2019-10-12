@@ -15,14 +15,24 @@ char *prefix, *upper_prefix;
 FILE *fout;
 
 void
-makeprefix()
+makeprefix(const char *filename)
 {
 	size_t i, len;
 	const char *pkgName = nbuf_Schema_pkgName(&schema, &len);
 	char ch;
 
 	if (len == 0) {
-		prefix = "";
+		prefix = strdup("");
+		len = strlen(filename);
+		/* file.nb => FILE_NB_H */
+		upper_prefix = malloc(len + 3);
+		for (i = 0; i < len; i++) {
+			ch = filename[i];
+			if (!isalnum(ch))
+				ch = '_';
+			upper_prefix[i] = toupper(ch);
+		}
+		strcpy(upper_prefix + len, "_H");
 		return;
 	}
 	/* pkg.name => pkg_name_, PKG_NAME_NB_H */
@@ -388,7 +398,7 @@ main(int argc, char *argv[])
 	load(argv[1], &base, &len);
 	nbuf_init_read(&buf, base, len);
 	schema = nbuf_get_Schema(&buf);
-	makeprefix();
+	makeprefix(argv[1]);
 
 	fout = stdout;
 	outhdr(argv[1]);
