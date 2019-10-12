@@ -1,0 +1,7 @@
+*.bin*
+*.capnp.c++
+*.capnp.h
+*_generated.h
+*.pb.cc
+*.pb.h
+bench_??
