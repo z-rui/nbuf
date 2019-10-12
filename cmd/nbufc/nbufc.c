@@ -71,6 +71,8 @@ parseflags(int *pargc, char ***pargv)
 		case 'O':
 			ofmt = *flagarg(pargv);
 			break;
+		case '\0':
+			goto out;
 		default:
 			fprintf(stderr, "invalid option %s\n", arg);
 			rc = 1;
@@ -80,6 +82,7 @@ parseflags(int *pargc, char ***pargv)
 			exit(rc);
 		}
 	}
+out:
 	*pargc -= *pargv - argv;
 }
 

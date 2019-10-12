@@ -114,8 +114,10 @@ makeschema(struct nbuf_buffer *buffer)
 	Schema = nbuf_new_Schema(buffer);
 	if (schema.pkgName != NULL)
 		nbuf_Schema_set_pkgName(&Schema, schema.pkgName, -1);
-	nbuf_Schema_init_enumTypes(&Schema, enumnames);
-	nbuf_Schema_init_msgTypes(&Schema, msgnames);
+	if (enumnames > 0)
+		nbuf_Schema_init_enumTypes(&Schema, enumnames);
+	if (msgnames > 0)
+		nbuf_Schema_init_msgTypes(&Schema, msgnames);
 }
 
 static void

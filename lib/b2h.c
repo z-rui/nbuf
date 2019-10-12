@@ -370,21 +370,20 @@ outhdr(struct nbuf_b2h *b2h, FILE *fout, const char *srcname)
 			b2h->upper_prefix[i] = toupper(ch);
 		}
 		strcpy(b2h->upper_prefix + len, "_H");
-		return;
+	} else {
+		/* pkg.name => pkg_name_, PKG_NAME_NB_H */
+		b2h->prefix = malloc(len + 2);
+		b2h->upper_prefix = malloc(len + 6);
+		for (i = 0; i < len; i++) {
+			ch = pkgName[i];
+			if (!isalnum(ch))
+				ch = '_';
+			b2h->prefix[i] = ch;
+			b2h->upper_prefix[i] = toupper(ch);
+		}
+		strcpy(b2h->prefix + len, "_");
+		strcpy(b2h->upper_prefix + len, "_NB_H");
 	}
-
-	/* pkg.name => pkg_name_, PKG_NAME_NB_H */
-	b2h->prefix = malloc(len + 2);
-	b2h->upper_prefix = malloc(len + 6);
-	for (i = 0; i < len; i++) {
-		ch = pkgName[i];
-		if (!isalnum(ch))
-			ch = '_';
-		b2h->prefix[i] = ch;
-		b2h->upper_prefix[i] = toupper(ch);
-	}
-	strcpy(b2h->prefix + len, "_");
-	strcpy(b2h->upper_prefix + len, "_NB_H");
 
 	fprintf(fout, "/* Generated from %s.  DO NOT EDIT. */\n\n",
 		srcname);
