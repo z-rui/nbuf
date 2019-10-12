@@ -4,4 +4,5 @@
 *_generated.h
 *.pb.cc
 *.pb.h
+*.nb.h
 bench_??
