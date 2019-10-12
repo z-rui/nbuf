@@ -1,4 +1,4 @@
-/* Generated from lib/nbuf.nb.  DO NOT EDIT. */
+/* Generated from lib/nbuf.nbs.  DO NOT EDIT. */
 
 #ifndef NBUF_NB_H
 #define NBUF_NB_H

@@ -167,6 +167,8 @@ main(int argc, char *argv[])
 		die("unknown output format\n");
 	}
 	nbuf_free(&buf);
+	fclose(yyin);
+	fclose(yyout);
 
 	return 0;
 }
