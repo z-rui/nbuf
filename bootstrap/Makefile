@@ -3,7 +3,6 @@ CFLAGS=-I../include -Wall -g
 CFLAGS+=-O2 -flto
 LDFLAGS+=-O2 -flto
 
-all: mknbs
-mknbs: mknbs.o
+bootstrap: bootstrap.o
 
-mknbs.o: mknbs.c ../include/nbuf.h
+bootstrap.o: bootstrap.c bootstrap.h ../include/nbuf.h

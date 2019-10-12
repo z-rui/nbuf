@@ -5,7 +5,7 @@
  */
 
 #include "nbuf.h"
-#include "nbuf.nb.h"
+#include "bootstrap.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -68,7 +68,7 @@ make_schema(struct nbuf_buffer *buf)
 	nbuf_MsgType msgType;
 	nbuf_EnumType enumType;
 
-	schema = nbuf_new_Schema(buf);
+	schema = nbuf_new_nbuf_Schema(buf);
 	nbuf_Schema_set_pkgName(&schema, "nbuf", 4);
 
 	/* msgTypes:
@@ -145,20 +145,12 @@ make_schema(struct nbuf_buffer *buf)
 		"PTR", nbuf_Kind_PTR);
 }
 
-void
-rawdump(const char *p, size_t n)
-{
-	FILE *f = fopen("nbuf.nbs", "w");
-	fwrite(p, n, 1, f);
-	fclose(f);
-}
-
 int
 main() {
 	struct nbuf_buffer buf;
 
 	nbuf_init_write(&buf, NULL, 0);
 	make_schema(&buf);
-	rawdump(buf.base, buf.len);
+	fwrite(buf.base, buf.len, 1, stdout);
 	return 0;
 }
