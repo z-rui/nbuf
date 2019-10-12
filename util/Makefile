@@ -16,8 +16,8 @@ lex.yy.c lex.yy.h: nbuf.l
 
 b2h.o: b2h.c ../nbuf.h nbuf.nb.h
 b2t.o: b2t.c ../nbuf.h nbuf.nb.h
-t2b.o: t2b.c ../nbuf.h nbuf.nb.h
+t2b.o: t2b.c ../nbuf.h nbuf.nb.h t2b.h
 load.o: load.c
 mknbs.o: mknbs.c ../nbuf.h nbuf.nb.h
 nbuf.tab.o: nbuf.tab.c nbuf.tab.h lex.yy.h
-lex.yy.o: lex.yy.c lex.yy.h nbuf.tab.h
+lex.yy.o: lex.yy.c lex.yy.h nbuf.tab.h t2b.h
