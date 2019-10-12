@@ -1,61 +1,26 @@
 /* Generate header from binary schema. */
 
-#include "nbuf.h"
 #include "nbuf.nb.h"
+#include "libnbuf.h"
 
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-extern void load(const char *filename, void **msg, size_t *size);
+struct nbuf_b2h {
+	nbuf_Schema schema;
+	char *prefix, *upper_prefix;
+};
 
-nbuf_Schema schema;
-char *prefix, *upper_prefix;
-FILE *fout;
-
-void
-makeprefix(const char *filename)
+static void
+genenums(struct nbuf_b2h *b2h, FILE *fout)
 {
-	size_t i, len;
-	const char *pkgName = nbuf_Schema_pkgName(&schema, &len);
-	char ch;
-
-	if (len == 0) {
-		prefix = strdup("");
-		len = strlen(filename);
-		/* file.nb => FILE_NB_H */
-		upper_prefix = malloc(len + 3);
-		for (i = 0; i < len; i++) {
-			ch = filename[i];
-			if (!isalnum(ch))
-				ch = '_';
-			upper_prefix[i] = toupper(ch);
-		}
-		strcpy(upper_prefix + len, "_H");
-		return;
-	}
-	/* pkg.name => pkg_name_, PKG_NAME_NB_H */
-	prefix = malloc(len + 2);
-	upper_prefix = malloc(len + 6);
-	for (i = 0; i < len; i++) {
-		ch = pkgName[i];
-		if (!isalnum(ch))
-			ch = '_';
-		prefix[i] = ch;
-		upper_prefix[i] = toupper(ch);
-	}
-	strcpy(prefix + len, "_");
-	strcpy(upper_prefix + len, "_NB_H");
-}
-
-void genenums()
-{
-	size_t n = nbuf_Schema_enumTypes_size(&schema);
+	size_t n = nbuf_Schema_enumTypes_size(&b2h->schema);
 	size_t i;
 
 	for (i = 0; i < n; i++) {
-		nbuf_EnumType e = nbuf_Schema_enumTypes(&schema, i);
+		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2h->schema, i);
 		const char *ename = nbuf_EnumType_name(&e, NULL);
 		size_t m = nbuf_EnumType_values_size(&e);
 		size_t j;
@@ -66,14 +31,14 @@ void genenums()
 			const char *name = nbuf_EnumDesc_name(&d, NULL);
 			uint16_t value = nbuf_EnumDesc_value(&d);
 			fprintf(fout, "\t%s%s_%s = %d,\n",
-				prefix, ename, name, value);
+				b2h->prefix, ename, name, value);
 		}
-		fprintf(fout, "} %s%s;\n", prefix, ename);
+		fprintf(fout, "} %s%s;\n", b2h->prefix, ename);
 	}
 }
 
-const char *
-typestr(nbuf_Kind kind, uint32_t tag1)
+static const char *
+typestr(nbuf_Schema *schema, nbuf_Kind kind, uint32_t tag1)
 {
 	static char buf[20];
 	nbuf_EnumType enm;
@@ -93,10 +58,10 @@ typestr(nbuf_Kind kind, uint32_t tag1)
 	case nbuf_Kind_STR:
 		return "const char *";
 	case nbuf_Kind_ENUM:
-		enm = nbuf_Schema_enumTypes(&schema, tag1);
+		enm = nbuf_Schema_enumTypes(schema, tag1);
 		return nbuf_EnumType_name(&enm, NULL);
 	case nbuf_Kind_PTR:
-		msg = nbuf_Schema_msgTypes(&schema, tag1);
+		msg = nbuf_Schema_msgTypes(schema, tag1);
 		return nbuf_MsgType_name(&msg, NULL);
 	default:
 		assert(0 && "unknown kind");
@@ -106,30 +71,32 @@ typestr(nbuf_Kind kind, uint32_t tag1)
 }
 
 static const char *
-maybeprefix(nbuf_Kind kind)
+maybeprefix(struct nbuf_b2h *b2h, nbuf_Kind kind)
 {
 	if (kind == nbuf_Kind_ENUM || kind == nbuf_Kind_PTR)
-		return prefix;
+		return b2h->prefix;
 	return "";
 }
 
-void gengetter(nbuf_FieldDesc fld, const char *mname)
+static void
+gengetter(struct nbuf_b2h *b2h, FILE *fout,
+	nbuf_FieldDesc fld, const char *mname)
 {
 	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
 	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
 	bool list = nbuf_FieldDesc_list(&fld);
 	uint32_t tag0 = nbuf_FieldDesc_tag0(&fld);
 	uint32_t tag1 = nbuf_FieldDesc_tag1(&fld);
-	const char *typ = typestr(kind, tag1);
+	const char *typ = typestr(&b2h->schema, kind, tag1);
 	const char *o = "&o->o";
 
-	fprintf(fout, "\nstatic inline %s%s\n", maybeprefix(kind), typ); 
+	fprintf(fout, "\nstatic inline %s%s\n", maybeprefix(b2h, kind), typ); 
 	fprintf(fout, "%s%s_%s(const %s%s *o%s%s)\n{\n",
-		prefix, mname, fname, prefix, mname,
+		b2h->prefix, mname, fname, b2h->prefix, mname,
 		list ? ", size_t i" : "",
 		(kind == nbuf_Kind_STR) ? ", size_t *lenp" : ""); 
 	if (kind == nbuf_Kind_PTR)
-		fprintf(fout, "\t%s%s oo;\n", prefix, typ);
+		fprintf(fout, "\t%s%s oo;\n", b2h->prefix, typ);
 	if (list) {
 		fprintf(fout,
 			"\tstruct nbuf_obj t = nbuf_get_ptr(&o->o, %u);\n",
@@ -183,7 +150,7 @@ void gengetter(nbuf_FieldDesc fld, const char *mname)
 	if (list) { // size getter
 		fprintf(fout, "\nstatic inline size_t\n");
 		fprintf(fout, "%s%s_%s_size(const %s%s *o)\n{\n",
-			prefix, mname, fname, prefix, mname);
+			b2h->prefix, mname, fname, b2h->prefix, mname);
 		fprintf(fout,
 			"\tstruct nbuf_obj t = nbuf_get_ptr(&o->o, %u);\n",
 			tag0);
@@ -192,24 +159,25 @@ void gengetter(nbuf_FieldDesc fld, const char *mname)
 	}
 }
 
-void
-gensetter(nbuf_FieldDesc fld, const char *mname)
+static void
+gensetter(struct nbuf_b2h *b2h, FILE *fout,
+	nbuf_FieldDesc fld, const char *mname)
 {
 	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
 	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
 	bool list = nbuf_FieldDesc_list(&fld);
 	uint32_t tag0 = nbuf_FieldDesc_tag0(&fld);
 	uint32_t tag1 = nbuf_FieldDesc_tag1(&fld);
-	const char *typ = typestr(kind, tag1);
+	const char *typ = typestr(&b2h->schema, kind, tag1);
 	const char *o = "&o->o";
 
 	if (kind == nbuf_Kind_PTR)
 		return;  /* no setter */
 	fprintf(fout, "\nstatic inline void\n");
 	fprintf(fout, "%s%s_set_%s(const %s%s *o%s, %s%s v%s)\n{\n",
-		prefix, mname, fname, prefix, mname,
+		b2h->prefix, mname, fname, b2h->prefix, mname,
 		list ? ", size_t i" : "",
-		maybeprefix(kind), typ,
+		maybeprefix(b2h, kind), typ,
 		(kind == nbuf_Kind_STR) ? ", size_t len" : ""); 
 	if (list) {
 		fprintf(fout,
@@ -251,16 +219,20 @@ gensetter(nbuf_FieldDesc fld, const char *mname)
 	fprintf(fout, "}\n");
 }
 
-void
-getsizeinfo(unsigned msgtype_id, uint16_t *ssize, uint16_t *psize)
+static void
+getsizeinfo(nbuf_Schema *schema,
+	unsigned msgtype_id,
+	uint16_t *ssize,
+	uint16_t *psize)
 {
-	nbuf_MsgType msg = nbuf_Schema_msgTypes(&schema, msgtype_id);
+	nbuf_MsgType msg = nbuf_Schema_msgTypes(schema, msgtype_id);
 	*ssize = nbuf_MsgType_ssize(&msg);
 	*psize = nbuf_MsgType_psize(&msg);
 }
 
-void
-geniniter(nbuf_FieldDesc fld, const char *mname)
+static void
+geniniter(struct nbuf_b2h *b2h, FILE *fout,
+	nbuf_FieldDesc fld, const char *mname)
 {
 	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
 	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
@@ -275,9 +247,10 @@ geniniter(nbuf_FieldDesc fld, const char *mname)
 	if (list)
 		fprintf(fout, "void");
 	else
-		fprintf(fout, "%s%s", prefix, typestr(kind, tag1));
+		fprintf(fout, "%s%s", b2h->prefix,
+			typestr(&b2h->schema, kind, tag1));
 	fprintf(fout, "\n%s%s_init_%s(const %s%s *o%s)\n{\n",
-		prefix, mname, fname, prefix, mname,
+		b2h->prefix, mname, fname, b2h->prefix, mname,
 		list ? ", size_t n" : "");
 	switch (kind) {
 	case nbuf_Kind_BOOL:
@@ -295,7 +268,7 @@ geniniter(nbuf_FieldDesc fld, const char *mname)
 		psize = 1;
 		break;
 	case nbuf_Kind_PTR:
-		getsizeinfo(tag1, &ssize, &psize);
+		getsizeinfo(&b2h->schema, tag1, &ssize, &psize);
 		break;
 	default:
 		assert(0 && "bad kind");
@@ -306,13 +279,14 @@ geniniter(nbuf_FieldDesc fld, const char *mname)
 	fprintf(fout, "\tnbuf_put_ptr(&o->o, %u, oo);\n", tag0);
 	if (!list) {
 		fprintf(fout, "\t%s%s t = {oo};\n\treturn t;",
-			prefix, typestr(kind, tag1));
+			b2h->prefix, typestr(&b2h->schema, kind, tag1));
 	}
 	fprintf(fout, "}\n");
 }
 
-void
-genhasfld(nbuf_FieldDesc fld, const char *mname)
+static void
+genhasfld(struct nbuf_b2h *b2h, FILE *fout,
+	nbuf_FieldDesc fld, const char *mname)
 {
 	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
 	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
@@ -323,19 +297,20 @@ genhasfld(nbuf_FieldDesc fld, const char *mname)
 		return;
 	fprintf(fout, "\nstatic inline bool\n");
 	fprintf(fout, "%s%s_has_%s(const %s%s *o)\n{\n",
-		prefix, mname, fname, prefix, mname);
+		b2h->prefix, mname, fname, b2h->prefix, mname);
 	fprintf(fout, "\treturn nbuf_has_ptr(&o->o, %u);\n", tag0);
 	fprintf(fout, "}\n");
 }
 
-void genmsgs()
+static void
+genmsgs(struct nbuf_b2h *b2h, FILE *fout)
 {
-	size_t n = nbuf_Schema_msgTypes_size(&schema);
+	size_t n = nbuf_Schema_msgTypes_size(&b2h->schema);
 	size_t i;
 
 	/* 1st pass - declare all types */
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType m = nbuf_Schema_msgTypes(&schema, i);
+		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2h->schema, i);
 		const char *mname = nbuf_MsgType_name(&m, NULL);
 		uint16_t ssize = nbuf_MsgType_ssize(&m);
 		uint16_t psize = nbuf_MsgType_psize(&m);
@@ -343,78 +318,103 @@ void genmsgs()
 		/* struct */
 		fprintf(fout, "\ntypedef struct {\n"
 			"\tstruct nbuf_obj o;\n} %s%s;\n",
-			prefix, mname);
+			b2h->prefix, mname);
 
 		/* reader */
-		fprintf(fout, "\nstatic inline %s%s\n", prefix, mname);
+		fprintf(fout, "\nstatic inline %s%s\n", b2h->prefix, mname);
 		fprintf(fout, "%sget_%s(struct nbuf_buffer *buf)\n",
-			prefix, mname);
+			b2h->prefix, mname);
 		fprintf(fout, "{\n\t%s%s o = {{buf}};\n"
 			"\tnbuf_obj_init(&o.o, 0);\n\treturn o;\n}\n",
-			prefix, mname);
+			b2h->prefix, mname);
 
 		/* writer */
-		fprintf(fout, "\nstatic inline %s%s\n", prefix, mname);
+		fprintf(fout, "\nstatic inline %s%s\n", b2h->prefix, mname);
 		fprintf(fout, "%snew_%s(struct nbuf_buffer *buf)\n",
-			prefix, mname);
+			b2h->prefix, mname);
 		fprintf(fout, "{\n\t%s%s o;\n"
 			"\to.o = nbuf_create(buf, 1, %u, %u);\n\treturn o;\n}\n",
-			prefix, mname, ssize, psize);
+			b2h->prefix, mname, ssize, psize);
 	}
 	/* 2st pass - declare all accessors */
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType msg = nbuf_Schema_msgTypes(&schema, i);
+		nbuf_MsgType msg = nbuf_Schema_msgTypes(&b2h->schema, i);
 		const char *mname = nbuf_MsgType_name(&msg, NULL);
 		size_t j, m = nbuf_MsgType_fields_size(&msg);
 		for (j = 0; j < m; j++) {
 			nbuf_FieldDesc fld = nbuf_MsgType_fields(&msg, j);
-			gengetter(fld, mname);
-			gensetter(fld, mname);
-			geniniter(fld, mname);
-			genhasfld(fld, mname);
+			gengetter(b2h, fout, fld, mname);
+			gensetter(b2h, fout, fld, mname);
+			geniniter(b2h, fout, fld, mname);
+			genhasfld(b2h, fout, fld, mname);
 		}
 	}
 }
 
-void
-outhdr(const char *infile)
+static void
+outhdr(struct nbuf_b2h *b2h, FILE *fout, const char *srcname)
 {
-	fprintf(fout, "/* Generated from %s.  DO NOT EDIT. */\n\n", infile);
-	fprintf(fout, "#ifndef %s\n#define %s\n\n", upper_prefix, upper_prefix);
+	size_t i, len;
+	const char *pkgName = nbuf_Schema_pkgName(&b2h->schema, &len);
+	char ch;
+
+	if (len == 0) {
+		b2h->prefix = strdup("");
+		len = strlen(srcname);
+		/* file.nb => FILE_NB_H */
+		b2h->upper_prefix = malloc(len + 3);
+		for (i = 0; i < len; i++) {
+			ch = srcname[i];
+			if (!isalnum(ch))
+				ch = '_';
+			b2h->upper_prefix[i] = toupper(ch);
+		}
+		strcpy(b2h->upper_prefix + len, "_H");
+		return;
+	}
+
+	/* pkg.name => pkg_name_, PKG_NAME_NB_H */
+	b2h->prefix = malloc(len + 2);
+	b2h->upper_prefix = malloc(len + 6);
+	for (i = 0; i < len; i++) {
+		ch = pkgName[i];
+		if (!isalnum(ch))
+			ch = '_';
+		b2h->prefix[i] = ch;
+		b2h->upper_prefix[i] = toupper(ch);
+	}
+	strcpy(b2h->prefix + len, "_");
+	strcpy(b2h->upper_prefix + len, "_NB_H");
+
+	fprintf(fout, "/* Generated from %s.  DO NOT EDIT. */\n\n",
+		srcname);
+	fprintf(fout, "#ifndef %s\n#define %s\n\n",
+		b2h->upper_prefix, b2h->upper_prefix);
 	fprintf(fout, "#include \"nbuf.h\"\n");
 }
 
-void
-outftr()
+static void
+outftr(struct nbuf_b2h *b2h, FILE *fout)
 {
-	fprintf(fout, "\n#endif  /* %s */\n", upper_prefix);
+	fprintf(fout, "\n#endif  /* %s */\n", b2h->upper_prefix);
+}
+
+static void
+cleanup(struct nbuf_b2h *b2h)
+{
+	free(b2h->prefix);
+	free(b2h->upper_prefix);
 }
 
 void
-cleanup()
+nbuf_b2h(struct nbuf_buffer *buf, FILE *fout, const char *srcname)
 {
-	free(prefix);
-	free(upper_prefix);
-}
+	struct nbuf_b2h b2h;
 
-int
-main(int argc, char *argv[])
-{
-	struct nbuf_buffer buf = {NULL};
-	void *base;
-	size_t len;
-
-	load(argv[1], &base, &len);
-	nbuf_init_read(&buf, base, len);
-	schema = nbuf_get_Schema(&buf);
-	makeprefix(argv[1]);
-
-	fout = stdout;
-	outhdr(argv[1]);
-	genenums();
-	genmsgs();
-	outftr();
-	cleanup();
-
-	return 0;
+	b2h.schema = nbuf_get_Schema(buf);
+	outhdr(&b2h, fout, srcname);
+	genenums(&b2h, fout);
+	genmsgs(&b2h, fout);
+	outftr(&b2h, fout);
+	cleanup(&b2h);
 }
