@@ -262,7 +262,7 @@ outmsgs()
 			ent = lookup(types, types_size, d->tname);
 			if (ent == NULL)
 				die("BUG: cannot find type \"%s\"\n",
-					d->name);
+					d->tname);
 			nbuf_FieldDesc_set_name(&de, d->name, -1);
 			nbuf_FieldDesc_set_list(&de, d->list);
 			nbuf_FieldDesc_set_kind(&de, ent->kind);

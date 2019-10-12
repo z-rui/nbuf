@@ -166,7 +166,8 @@ void gengetter(nbuf_FieldDesc fld, const char *mname)
 		break;
 	case nbuf_Kind_PTR:
 		if (!list) {
-			fprintf(fout, "\too.o = nbuf_get_ptr(o, %u);\n", tag0);
+			fprintf(fout, "\too.o = nbuf_get_ptr(&o->o, %u);\n",
+				tag0);
 		} else {
 			fprintf(fout, "\too.o = t;\n");
 		}
@@ -270,8 +271,12 @@ geniniter(nbuf_FieldDesc fld, const char *mname)
 
 	if (kind != nbuf_Kind_PTR && !list)
 		return;
-	fprintf(fout, "\nstatic inline void\n");
-	fprintf(fout, "%s%s_init_%s(const %s%s *o%s)\n{\n",
+	fprintf(fout, "\nstatic inline ");
+	if (list)
+		fprintf(fout, "void");
+	else
+		fprintf(fout, "%s%s", prefix, typestr(kind, tag1));
+	fprintf(fout, "\n%s%s_init_%s(const %s%s *o%s)\n{\n",
 		prefix, mname, fname, prefix, mname,
 		list ? ", size_t n" : "");
 	switch (kind) {
@@ -299,6 +304,10 @@ geniniter(nbuf_FieldDesc fld, const char *mname)
 		"nbuf_create(o->o.buf, %s, %u, %u);\n",
 		list ? "n" : "1", ssize, psize);
 	fprintf(fout, "\tnbuf_put_ptr(&o->o, %u, oo);\n", tag0);
+	if (!list) {
+		fprintf(fout, "\t%s%s t = {oo};\n\treturn t;",
+			prefix, typestr(kind, tag1));
+	}
 	fprintf(fout, "}\n");
 }
 
