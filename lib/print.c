@@ -143,7 +143,7 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 		kind = nbuf_FieldDesc_kind(&fld);
 		tag0 = nbuf_FieldDesc_tag0(&fld);
 		tag1 = nbuf_FieldDesc_tag1(&fld);
-		if (nbuf_FieldDesc_list(&fld)) {
+		if (nbuf_FieldDesc_list(&fld) || kind == nbuf_Kind_PTR) {
 			oo = nbuf_get_ptr(o, tag0);
 			tag0 = 0;
 		} else {
@@ -181,7 +181,7 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 				nwrite += fprintf(ctx->fout,
 					"%" PRIu64,
 					nbuf_get_int(&oo, tag0, tag1)
-					& ((((uint64_t) 1) << (tag1*8))-1));
+					& ((uint64_t) -1 >> (8*(8-tag1))));
 				break;
 			case nbuf_Kind_FLOAT:
 				nwrite += (tag1 == 4)
