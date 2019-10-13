@@ -15,25 +15,25 @@ extern FILE *yyin, *yyout;
 extern int yyparse();
 
 static const char *progname;
+static const char *srcname = "-";
 static const char *outname = "-";
-static char ifmt = 't', ofmt = 't';
+static struct nbuf_buffer buf;
 
 static void
 usage()
 {
-	printf("usage: %s [-o<fmt> outfile] [-i<fmt>] infile\n\n",
+	printf("usage: %s [-h] [-i<fmt> infile] {-o<fmt> outfile}\n\n",
 		progname);
 	printf("copyright 2019 zr\n");
 	printf("compile a schema file.\n\n");
 	printf("options:\n");
-	printf("  -o<fmt> outfile    output format (default: t)\n");
-	printf("                     and filename (default: -)\n");
-	printf("  -i<fmt>            input format (default: t)\n");
+	printf("  -i<fmt> infile     input format and filename\n");
+	printf("  -o<fmt> outfile    output format and filename\n");
 	printf("formats:\n");
-	printf("  t[ext]    IO  textual schema\n");
-	printf("  b[inary]  IO  binary schema\n");
-	printf("  h          O  c header\n");
-	printf("  c          O  c file\n");
+	printf("  t            io    textual schema\n");
+	printf("  b            io    binary schema\n");
+	printf("  h             o    c declarations\n");
+	printf("  c             o    c definitions\n");
 }
 
 static const char *
@@ -45,44 +45,6 @@ flagarg(char ***pargv)
 	if (s == NULL)
 		die("missing argument for %s\n", *--*pargv);
 	return s;
-}
-
-static void
-parseflags(int *pargc, char ***pargv)
-{
-	char **argv = *pargv;
-	const char *arg;
-	int rc = 0;
-
-	for (progname = *(*pargv)++;
-		(arg = **pargv) && arg[0] == '-';
-		++*pargv) {
-		switch (arg[1]) {
-		case 'o':
-			ofmt = arg[2];
-			if (!ofmt || !strchr("tbhc", ofmt))
-				goto invalid_option;
-			outname = flagarg(pargv);
-			break;
-		case 'i':
-			ifmt = arg[2];
-			if (!ifmt || !strchr("tb", ifmt))
-				goto invalid_option;
-			break;
-		case '\0':
-			goto out;
-		default:
-invalid_option:
-			fprintf(stderr, "invalid option %s\n", arg);
-			rc = 1;
-			/* fallthrough */
-		case 'h':
-			usage();
-			exit(rc);
-		}
-	}
-out:
-	*pargc -= *pargv - argv;
 }
 
 static FILE *
@@ -124,34 +86,37 @@ dump(struct nbuf_buffer *buf)
 	fwrite(buf->base, buf->len, 1, yyout);
 }
 
-int
-main(int argc, char *argv[])
+static bool input_done = false;
+static bool output_done = false;
+
+static bool
+do_input(char ifmt)
 {
-	struct nbuf_buffer buf;
-	const char *srcname;
-
-	parseflags(&argc, &argv);
-	if (argc != 1) {
-		fprintf(stderr, "need exactly 1 argument\n");
-		usage();
-		return 1;
-	}
-	srcname = *argv;
+	if (input_done)
+		die("cannot specify more than one input");
 	yyin = myopen(srcname, "rb");
-	yyout = myopen(outname, "wb");
-
-	nbuf_init_write(&buf, NULL, 0);
 	switch (ifmt) {
 	case 't':
 		yyparse();
 		nbuf_t2b(&buf);
+		input_done = true;
 		break;
 	case 'b':
 		load(&buf);
+		input_done = true;
 		break;
-	default:
-		die("unknown input format\n");
 	}
+	return input_done;
+}
+
+static bool
+do_output(char ofmt)
+{
+	if (!input_done)
+		do_input('t');
+	if (!input_done)
+		die("input failed...why?");
+	yyout = myopen(outname, "wb");
 	switch (ofmt) {
 	case 't':
 		nbuf_b2t(&buf, yyout);
@@ -166,8 +131,44 @@ main(int argc, char *argv[])
 		nbuf_b2r(&buf, yyout, srcname);
 		break;
 	default:
-		die("unknown output format\n");
+		return false;
 	}
+	output_done = true;
+	return true;
+}
+
+int
+main(int argc, char *argv[])
+{
+	int rc = 0;
+	const char *arg;
+
+	nbuf_init_write(&buf, NULL, 0);
+	for (progname = *argv++; (arg = *argv) && arg[0] == '-'; ++argv) {
+		switch (arg[1]) {
+		case 'i':
+			srcname = flagarg(&argv);
+			if (!do_input(arg[2]))
+				goto invalid_option;
+			break;
+		case 'o':
+			outname = flagarg(&argv);
+			if (!do_output(arg[2]))
+				goto invalid_option;
+			break;
+		default:
+invalid_option:
+			fprintf(stderr, "invalid option %s\n", arg);
+			rc = 1;
+			/* fallthrough */
+		case 'h':
+			usage();
+			exit(rc);
+		}
+	}
+	if (!output_done)
+		do_output('t');
+
 	nbuf_free(&buf);
 	fclose(yyin);
 	fclose(yyout);

@@ -23,7 +23,7 @@ bench_fb_generated.h: bench_fb.fbs
 	flatc -c bench_fb.fbs
 
 bench.nb.h: bench.nbs
-	../nbufc/nbufc -o $@ $<
+	../nbufc/nbufc -it $< -oh $@
 
 bench_pb.pb.h bench_pb.pb.cc: bench_pb.proto
 	protoc --cpp_out=. bench_pb.proto
