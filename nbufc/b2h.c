@@ -102,8 +102,7 @@ gengetter(struct nbuf_b2h *b2h, FILE *fout,
 			"\tstruct nbuf_obj t = nbuf_get_ptr(&o->o, %u);\n",
 			tag0);
 		tag0 = 0;
-		fprintf(fout, "\tt = nbuf_get_elem(&t, %s);\n",
-			(kind == nbuf_Kind_BOOL) ? "i/8" : "i");
+		fprintf(fout, "\tt = nbuf_get_elem(&t, i);\n");
 		o = "&t";
 	}
 	switch (kind) {
@@ -184,8 +183,7 @@ gensetter(struct nbuf_b2h *b2h, FILE *fout,
 			"\tstruct nbuf_obj t = nbuf_get_ptr(&o->o, %u);\n",
 			tag0);
 		tag0 = 0;
-		fprintf(fout, "\tt = nbuf_get_elem(&t, %s);\n",
-			(kind == nbuf_Kind_BOOL) ? "i/8" : "i");
+		fprintf(fout, "\tt = nbuf_get_elem(&t, i);\n");
 		o = "&t";
 	}
 	switch (kind) {
@@ -254,7 +252,6 @@ geniniter(struct nbuf_b2h *b2h, FILE *fout,
 		list ? ", size_t n" : "");
 	switch (kind) {
 	case nbuf_Kind_BOOL:
-		ssize = 1;
 		break;
 	case nbuf_Kind_INT:
 	case nbuf_Kind_UINT:

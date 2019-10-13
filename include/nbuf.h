@@ -166,7 +166,9 @@ nbuf_obj_init(
 		rr->ssize = hdr & ((1<<NBUF_HALF_WORD_BIT)-1);
 		rr->psize = hdr >> NBUF_HALF_WORD_BIT;
 #ifndef NBUF_UNSAFE
-		size_t totalsz = nbuf_elemsz(rr) * rr->nelem;
+		size_t elemsz = nbuf_elemsz(rr);
+		size_t totalsz = (elemsz == 0)
+			? (rr->nelem + 7) / 8 : elemsz * rr->nelem;
 		if (totalsz == 0 || !nbuf_bounds_check(rr->buf, base, totalsz)) {
 			/* corrupted/malicious message */
 			rr->nelem = rr->ssize = rr->psize = 0;
@@ -183,9 +185,9 @@ nbuf_get_elem(const struct nbuf_obj *r, size_t i)
 	struct nbuf_obj rr = {r->buf};
 	size_t elemsz = nbuf_elemsz(r);
 	if (i < r->nelem) {
-		rr.base = r->base + i * elemsz;
+		rr.base = r->base + ((elemsz == 0) ? i / 8 :i * elemsz);
 		rr.nelem = 1;
-		rr.ssize = r->ssize;
+		rr.ssize = (elemsz == 0) ? 1 : r->ssize;
 		rr.psize = r->psize;
 	}
 	return rr;
@@ -314,14 +316,20 @@ nbuf_create(struct nbuf_buffer *buf,
 		| (((uint64_t) psize) << 48);
 	struct nbuf_obj rr = {buf, buf->len, nelem, ssize, psize};
 	size_t elemsz = nbuf_elemsz(&rr);
-	size_t totalsz = NBUF_ROUNDUP(elemsz * nelem + sizeof hdr, NBUF_ALIGN);
+	size_t totalsz;
+
+	totalsz = sizeof hdr;
+	totalsz += (ssize == 0 && psize == 0)
+		? (nelem+7) / 8  /* bool array */
+		: nelem * elemsz;  /* other */
+	totalsz = NBUF_ROUNDUP(totalsz, NBUF_ALIGN);
 
 	assert(buf->len <= buf->cap);
 	/* since {s,p}size are 16 bits,
 	 * elemsz should be reasonably small and the multiplication
 	 * cannot overflow. */
-	assert(0 < elemsz && elemsz < UINT32_MAX);
-	assert(SIZE_MAX / elemsz > nelem);
+	assert(0 <= elemsz && elemsz < UINT32_MAX);
+	assert(elemsz == 0 || SIZE_MAX / elemsz > nelem);
 	/* pointers must be properly aligned */
 	assert(psize == 0 || elemsz % NBUF_WORD_SZ == 0);
 	if (!nbuf_reserve(buf, totalsz)) {
@@ -341,6 +349,7 @@ static inline void
 nbuf_resize(struct nbuf_obj *r, size_t nelem)
 {
 	size_t elemsz = nbuf_elemsz(r);
+	/* FIXME this is wrong for []bool */
 	size_t end = NBUF_ROUNDUP(r->base + r->nelem * elemsz, NBUF_ALIGN);
 	size_t newend = NBUF_ROUNDUP(r->base + nelem * elemsz, NBUF_ALIGN);
 	assert(nelem < UINT32_MAX);

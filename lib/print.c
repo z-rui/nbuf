@@ -59,8 +59,8 @@ do_print_notype(struct ctx *ctx, struct nbuf_obj *o)
 		struct nbuf_obj oo;
 
 		oo = nbuf_get_ptr(o, i);
-		if (oo.ssize == 1 && oo.psize == 0 && oo.nelem > 0) {
-			oo.ssize = oo.nelem;
+		if (oo.ssize <= 1 && oo.psize == 0 && oo.nelem > 0) {
+			oo.ssize = (oo.ssize == 0) ? (oo.nelem+7)/8 : oo.nelem;
 			oo.nelem = 1;
 		}
 		for (j = 0; j < oo.nelem; j++) {
@@ -148,6 +148,8 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 		tag1 = nbuf_FieldDesc_tag1(&fld);
 		if (nbuf_FieldDesc_list(&fld) || kind == nbuf_Kind_PTR) {
 			oo = nbuf_get_ptr(o, tag0);
+			if (kind == nbuf_Kind_BOOL)
+				oo.ssize = 1;
 			tag0 = 0;
 		} else {
 			oo = subobj(o, fld);
