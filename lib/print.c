@@ -221,9 +221,8 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 }
 
 int
-nbuf_print(struct nbuf_obj *o, FILE *fout,
-	nbuf_Schema *schema, nbuf_MsgType *msgType,
-	int indent)
+nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
+	nbuf_Schema *schema, nbuf_MsgType *msgType)
 {
 	struct ctx ctx;
 

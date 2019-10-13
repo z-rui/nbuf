@@ -22,8 +22,7 @@ nbuf_Schema_enumType_by_name(
 	const char *name);
 
 extern int
-nbuf_print(struct nbuf_obj *o, FILE *fout,
-	nbuf_Schema *schema, nbuf_MsgType *msgType,
-	int indent);
+nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
+	nbuf_Schema *schema, nbuf_MsgType *msgType);
 
 #endif  /* LIBNBUF_H */
