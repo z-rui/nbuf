@@ -181,7 +181,7 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 				nwrite += fprintf(ctx->fout,
 					"%" PRIu64,
 					nbuf_get_int(&oo, tag0, tag1)
-					& ((1<<tag1*8)-1));
+					& ((((uint64_t) 1) << (tag1*8))-1));
 				break;
 			case nbuf_Kind_FLOAT:
 				nwrite += (tag1 == 4)
