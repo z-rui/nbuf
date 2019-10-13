@@ -380,17 +380,15 @@ nbuf_MsgType_set_psize(const nbuf_MsgType *o, uint16_t v)
 	return nbuf_put_int(&o->o, 2, 2, v);
 }
 
-extern nbuf_EnumType nbuf_refl_Kind;
+extern nbuf_EnumType
+nbuf_refl_Kind;
 
-extern nbuf_MsgType nbuf_refl_Schema;
-
-extern nbuf_MsgType nbuf_refl_EnumDesc;
-
-extern nbuf_MsgType nbuf_refl_EnumType;
-
-extern nbuf_MsgType nbuf_refl_FieldDesc;
-
-extern nbuf_MsgType nbuf_refl_MsgType;
+extern nbuf_MsgType
+nbuf_refl_Schema,
+nbuf_refl_EnumDesc,
+nbuf_refl_EnumType,
+nbuf_refl_FieldDesc,
+nbuf_refl_MsgType;
 
 extern nbuf_Schema nbuf_refl_schema;
 

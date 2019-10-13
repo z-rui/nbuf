@@ -38,13 +38,15 @@ genenums(struct nbuf_b2c *b2c, FILE *fout)
 	size_t n = nbuf_Schema_enumTypes_size(&b2c->schema);
 	size_t i;
 
+	fprintf(fout, "\nnbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2c->schema, i);
 		const char *ename = nbuf_EnumType_name(&e, NULL);
 
-		fprintf(fout, "\nnbuf_EnumType %srefl_%s = ",
-			b2c->prefix, ename);
-		fprintf(fout, "{{&buf, 1, %u, %u}};\n", e.o.ssize, e.o.psize);
+		fprintf(fout, "%srefl_%s = {{&buf, %lu, 1, %u, %u}}%c\n",
+			b2c->prefix, ename,
+			(unsigned long) e.o.base, e.o.ssize, e.o.psize,
+			(i == n-1) ? ';' : ',');
 	}
 }
 
@@ -54,15 +56,15 @@ genmsgs(struct nbuf_b2c *b2c, FILE *fout)
 	size_t n = nbuf_Schema_msgTypes_size(&b2c->schema);
 	size_t i;
 
-	/* 1st pass - declare all types */
+	fprintf(fout, "\nnbuf_MsgType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2c->schema, i);
 		const char *mname = nbuf_MsgType_name(&m, NULL);
 
-		fprintf(fout, "\nnbuf_MsgType %srefl_%s = ",
-			b2c->prefix, mname);
-		fprintf(fout, "{{&buf, %lu, 1, %u, %u}};\n",
-			(unsigned long) m.o.base, m.o.ssize, m.o.psize);
+		fprintf(fout, "%srefl_%s = {{&buf, %lu, 1, %u, %u}}%c\n",
+			b2c->prefix, mname,
+			(unsigned long) m.o.base, m.o.ssize, m.o.psize,
+			(i == n-1) ? ';' : ',');
 	}
 }
 

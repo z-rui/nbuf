@@ -399,18 +399,20 @@ outftr(struct nbuf_b2h *b2h, FILE *fout)
 	/* These have to be put at the end to avoid forward declaration
 	 * problems in nbuf.nb.h */
 	n = nbuf_Schema_enumTypes_size(&b2h->schema);
+	fprintf(fout, "\nextern nbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2h->schema, i);
 		const char *ename = nbuf_EnumType_name(&e, NULL);
-		fprintf(fout, "\nextern nbuf_EnumType %srefl_%s;\n",
-			b2h->prefix, ename);
+		fprintf(fout, "%srefl_%s%c\n",
+			b2h->prefix, ename, (i == n-1) ? ';' : ',');
 	}
 	n = nbuf_Schema_msgTypes_size(&b2h->schema);
+	fprintf(fout, "\nextern nbuf_MsgType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2h->schema, i);
 		const char *mname = nbuf_MsgType_name(&m, NULL);
-		fprintf(fout, "\nextern nbuf_MsgType %srefl_%s;\n",
-			b2h->prefix, mname);
+		fprintf(fout, "%srefl_%s%c\n",
+			b2h->prefix, mname, (i == n-1) ? ';' : ',');
 	}
 	fprintf(fout, "\nextern nbuf_Schema %srefl_schema;\n", b2h->prefix);
 	fprintf(fout, "\n#endif  /* %s */\n", b2h->upper_prefix);
