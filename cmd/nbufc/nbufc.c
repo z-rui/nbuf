@@ -163,6 +163,9 @@ main(int argc, char *argv[])
 	case 'c':
 		nbuf_b2h(&buf, yyout, srcname);
 		break;
+	case 'C':
+		nbuf_b2r(&buf, yyout, srcname);
+		break;
 	default:
 		die("unknown output format\n");
 	}
