@@ -7,14 +7,14 @@ Benchmark code for Cap'n Proto, FlatBuffers, and Protocol Buffers is included.
 
 # Schema compiler
 
-A schema compiler is implemented in `cmd/nbufc/`.
+A schema compiler is implemented in `nbufc/`.
 Please refer to the `.l` and `.y` for the syntax.
 
 The compiler compiles a text schema into binary form,
 whose format is specified by the "meta"-schema `lib/nbuf.nbs`.
 
 By default, the compiler outputs a C header file.
-Code generation is implemented in `lib/b2h.c`.
+Code generation is implemented in `nbufc/b2h.c`.
 
 # TODO
 

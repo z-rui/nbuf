@@ -1,3 +1,4 @@
 lex.yy.[ch]
 nbuf.tab.[ch]
 nbufc
+libnbufc.a

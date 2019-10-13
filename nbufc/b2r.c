@@ -1,7 +1,7 @@
 /* Generate header from binary schema. */
 
 #include "nbuf.nb.h"
-#include "libnbuf.h"
+#include "libnbufc.h"
 
 #include <assert.h>
 #include <ctype.h>

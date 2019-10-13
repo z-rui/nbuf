@@ -6,13 +6,6 @@
 
 #include <stdio.h>
 
-extern void
-nbuf_b2h(struct nbuf_buffer *buf, FILE *fout, const char *srcname);
-extern void
-nbuf_b2r(struct nbuf_buffer *buf, FILE *fout, const char *srcname);
-extern void
-nbuf_b2t(struct nbuf_buffer *buf, FILE *fout);
-
 extern const char *
 nbuf_EnumType_value_to_name(nbuf_EnumType *enm, uint16_t val);
 

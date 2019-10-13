@@ -1,5 +1,5 @@
 #include "nbuf.h"
-#include "libnbuf.h"
+#include "libnbufc.h"
 #include "t2b.h"
 
 #include <stdio.h>

@@ -1,7 +1,8 @@
 /* binary -> text */
 
 #include "nbuf.nb.h"
-#include "libnbuf.h"
+#include "libnbufc.h"
+
 #include <stdio.h>
 
 static void
