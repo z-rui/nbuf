@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-I../../include -I../../lib -Wall -g
-CFLAGS+=-O2 -flto
-LDFLAGS+=-O2 -flto
+CFLAGS=-I../../include -I../../lib -Wall
+CFLAGS+=-g -O2 -flto
+LDFLAGS+=-g -O2 -flto
 
 nbufc: nbufc.o t2b.o lex.yy.o nbuf.tab.o ../../lib/libnbuf.a
 

@@ -108,7 +108,7 @@ load(struct nbuf_buffer *buf)
 	for (;;) {
 		size_t nread;
 		nbuf_reserve(buf, NBUF_ALLOC_INC);
-		nread = fread(buf->base + buf->len, NBUF_ALLOC_INC, 1, yyin);
+		nread = fread(buf->base + buf->len, 1, NBUF_ALLOC_INC, yyin);
 		buf->len += nread;
 		if (nread < NBUF_ALLOC_INC)
 			break;
