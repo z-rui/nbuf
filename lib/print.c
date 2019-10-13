@@ -117,6 +117,9 @@ subobj(struct nbuf_obj *o, nbuf_FieldDesc fld)
 		oo.base = o->base + tag0;
 		break;
 	}
+	if ((oo.ssize && oo.base >= o->base + o->ssize)
+		|| (oo.psize && oo.base >= o->base + nbuf_elemsz(o)))
+		oo.nelem = 0;
 	return oo;
 }
 
