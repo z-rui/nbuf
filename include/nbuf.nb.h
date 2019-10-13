@@ -269,13 +269,13 @@ nbuf_FieldDesc_set_name(const nbuf_FieldDesc *o, const char * v, size_t len)
 static inline nbuf_Kind
 nbuf_FieldDesc_kind(const nbuf_FieldDesc *o)
 {
-	return nbuf_get_int(&o->o, 0, 2);
+	return (nbuf_Kind) nbuf_get_int(&o->o, 0, 2);
 }
 
 static inline void
 nbuf_FieldDesc_set_kind(const nbuf_FieldDesc *o, nbuf_Kind v)
 {
-	return nbuf_put_int(&o->o, 0, 2, v);
+	return nbuf_put_int(&o->o, 0, 2, (uint16_t) v);
 }
 
 static inline bool

@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-I../include -Wall
-CFLAGS+=-g #-O2 -flto
-LDFLAGS+=-g #-O2 -flto
+CFLAGS+=-g -O2 -flto
+LDFLAGS+=-g -O2 -flto
 AR=gcc-ar
 
 all: libnbuf.a

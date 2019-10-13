@@ -119,8 +119,8 @@ gengetter(struct nbuf_b2h *b2h, FILE *fout,
 			o, tag0, tag1);
 		break;
 	case nbuf_Kind_ENUM:
-		fprintf(fout, "\treturn nbuf_get_int(%s, %u, 2);\n",
-			o, tag0);
+		fprintf(fout, "\treturn (%s%s) nbuf_get_int(%s, %u, 2);\n",
+			b2h->prefix, typ, o, tag0);
 		break;
 	case nbuf_Kind_FLOAT:
 		fprintf(fout, "\treturn nbuf_get_f%d(%s, %u);\n",
@@ -200,8 +200,8 @@ gensetter(struct nbuf_b2h *b2h, FILE *fout,
 			o, tag0, tag1);
 		break;
 	case nbuf_Kind_ENUM:
-		fprintf(fout, "\treturn nbuf_put_int(%s, %u, 2, v);\n",
-			o, tag0);
+		fprintf(fout, "\treturn nbuf_put_int(%s, %u, 2, "
+			"(uint16_t) v);\n", o, tag0);
 		break;
 	case nbuf_Kind_FLOAT:
 		fprintf(fout, "\treturn nbuf_put_f%d(%s, %u, v);\n",

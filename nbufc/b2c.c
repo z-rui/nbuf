@@ -18,16 +18,18 @@ outbuf(struct nbuf_b2c *b2c, FILE *fout, struct nbuf_buffer *buf)
 {
 	size_t i;
 
-	fprintf(fout, "\nstatic const unsigned char buf_data[] = {");
+	fprintf(fout, "\nstatic const union { "
+		"unsigned char b[%lu]; uint64_t u; } buf_data = {{",
+		(unsigned long) buf->len);
 	/* 16 numbers per line => 80 characters */
 	for (i = 0; i < buf->len; i++) {
 		fprintf(fout, "%s%3u,",
 			(i % 16 == 0) ? "\n" : " ",
 			buf->base[i] & 0xff);
 	}
-	fprintf(fout, "\n};\n");
+	fprintf(fout, "\n}};\n");
 	fprintf(fout, "\nstatic struct nbuf_buffer buf = "
-		"{(char *) buf_data, sizeof buf_data, 0};\n");
+		"{(char *) buf_data.b, sizeof buf_data, 0};\n");
 }
 
 static void
@@ -87,7 +89,8 @@ outhdr(struct nbuf_b2c *b2c, FILE *fout, const char *srcname)
 
 	fprintf(fout, "/* Generated from %s.  DO NOT EDIT. */\n\n",
 		srcname);
-	fprintf(fout, "#include \"nbuf.nb.h\"\n");
+	fprintf(fout, "#include \"nbuf.nb.h\"\n\n");
+	fprintf(fout, "#include <stdint.h>\n");
 }
 
 static void
