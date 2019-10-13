@@ -4,6 +4,7 @@
 #define NBUF_NB_H
 
 #include "nbuf.h"
+#include "nbuf.nb.h"
 
 typedef enum {
 	nbuf_Kind_BOOL = 0,
@@ -378,5 +379,19 @@ nbuf_MsgType_set_psize(const nbuf_MsgType *o, uint16_t v)
 {
 	return nbuf_put_int(&o->o, 2, 2, v);
 }
+
+extern nbuf_EnumType nbuf_refl_Kind;
+
+extern nbuf_MsgType nbuf_refl_Schema;
+
+extern nbuf_MsgType nbuf_refl_EnumDesc;
+
+extern nbuf_MsgType nbuf_refl_EnumType;
+
+extern nbuf_MsgType nbuf_refl_FieldDesc;
+
+extern nbuf_MsgType nbuf_refl_MsgType;
+
+extern nbuf_Schema nbuf_refl_schema;
 
 #endif  /* NBUF_NB_H */
