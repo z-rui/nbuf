@@ -128,7 +128,7 @@ do_output(char ofmt)
 		nbuf_b2h(&buf, yyout, srcname);
 		break;
 	case 'c':
-		nbuf_b2r(&buf, yyout, srcname);
+		nbuf_b2c(&buf, yyout, srcname);
 		break;
 	default:
 		return false;
