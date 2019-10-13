@@ -16,23 +16,24 @@ extern int yyparse();
 
 static const char *progname;
 static const char *outname = "-";
-static char ifmt = 't', ofmt = 'c';
+static char ifmt = 't', ofmt = 't';
 
 static void
 usage()
 {
-	printf("usage: %s [-o outfile] [-I fmt] [-O fmt] [-h] infile\n\n",
+	printf("usage: %s [-o<fmt> outfile] [-i<fmt>] infile\n\n",
 		progname);
 	printf("copyright 2019 zr\n");
 	printf("compile a schema file.\n\n");
 	printf("options:\n");
-	printf("  -o outfile    output filename (default: -)\n");
-	printf("  -I fmt        input format (default: t)\n");
-	printf("  -O fmt        output format (default: c)\n");
+	printf("  -o<fmt> outfile    output format (default: t)\n");
+	printf("                     and filename (default: -)\n");
+	printf("  -i<fmt>            input format (default: t)\n");
 	printf("formats:\n");
 	printf("  t[ext]    IO  textual schema\n");
 	printf("  b[inary]  IO  binary schema\n");
-	printf("  c          O  c header\n");
+	printf("  h          O  c header\n");
+	printf("  c          O  c file\n");
 }
 
 static const char *
@@ -40,14 +41,9 @@ flagarg(char ***pargv)
 {
 	const char *s;
 
-	if ((**pargv)[2])
-		return **pargv + 2;
 	s = *++*pargv;
-	if (s == NULL) {
-		fprintf(stderr, "missing argument for %s\n",
-			*--*pargv);
-		exit(1);
-	}
+	if (s == NULL)
+		die("missing argument for %s\n", *--*pargv);
 	return s;
 }
 
@@ -63,17 +59,20 @@ parseflags(int *pargc, char ***pargv)
 		++*pargv) {
 		switch (arg[1]) {
 		case 'o':
+			ofmt = arg[2];
+			if (!ofmt || !strchr("tbhc", ofmt))
+				goto invalid_option;
 			outname = flagarg(pargv);
 			break;
-		case 'I':
-			ifmt = *flagarg(pargv);
-			break;
-		case 'O':
-			ofmt = *flagarg(pargv);
+		case 'i':
+			ifmt = arg[2];
+			if (!ifmt || !strchr("tb", ifmt))
+				goto invalid_option;
 			break;
 		case '\0':
 			goto out;
 		default:
+invalid_option:
 			fprintf(stderr, "invalid option %s\n", arg);
 			rc = 1;
 			/* fallthrough */
@@ -160,10 +159,10 @@ main(int argc, char *argv[])
 	case 'b':
 		dump(&buf);
 		break;
-	case 'c':
+	case 'h':
 		nbuf_b2h(&buf, yyout, srcname);
 		break;
-	case 'C':
+	case 'c':
 		nbuf_b2r(&buf, yyout, srcname);
 		break;
 	default:
