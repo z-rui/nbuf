@@ -47,7 +47,7 @@ do_print_notype(struct ctx *ctx, struct nbuf_obj *o)
 {
 	int nwrite = 0;
 	char nl = (ctx->indent_inc >= 0) ? '\n' : ' ';
-	size_t i, j;
+	uint32_t i, j;
 
 	if (o->ssize > 0) {
 		nwrite += do_indent(ctx->indent, ctx->fout);
@@ -67,7 +67,7 @@ do_print_notype(struct ctx *ctx, struct nbuf_obj *o)
 			if (!nbuf_bounds_check(oo.buf, oo.base, oo.ssize))
 				break;  /* out of bounds */
 			nwrite += do_indent(ctx->indent, ctx->fout);
-			nwrite += fprintf(ctx->fout, "%zu: ", i+1);
+			nwrite += fprintf(ctx->fout, "%" PRId32 ": ", i+1);
 			if (oo.psize == 0) {
 				nwrite += dumpstr(ctx->fout,
 					oo.buf->base + oo.base,
