@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-I../include -Wall
-CFLAGS+=-g -O2 -flto
-LDFLAGS+=-g -O2 -flto
-AR=gcc-ar
+CFLAGS+=-g -O2
+LDFLAGS+=
+AR=ar
 
 nbufc: nbufc.o t2b.o lex.yy.o nbuf.tab.o libnbufc.a
 libnbufc.a: b2h.o b2t.o b2c.o
