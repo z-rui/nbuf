@@ -1,0 +1,39 @@
+package my_game
+
+enum Gender {
+	NONE = 0
+	MALE = 1
+	FEMALE = 2
+}
+
+enum Race {
+	NONE = 0
+	HUMAN = 1
+	GNOME = 2
+	DWARF = 3
+	ELF = 4
+	ORC = 5
+}
+
+message Hero {
+	name: string
+	gender: Gender
+	race: Race
+	hp: uint16
+	mana: uint16
+	inventory: []Item
+}
+
+enum BUC {
+	UNCURSED = 0
+	CURSED = 1
+	BLESSED = 2
+}
+
+message Item {
+	name: string
+	quantity: uint32
+	buc: BUC
+	corroded: bool
+	enchantment: int8
+}

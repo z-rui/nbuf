@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package my_game;
+
+enum Gender {
+	NONE_GENDER = 0;
+	MALE = 1;
+	FEMALE = 2;
+}
+
+enum Race {
+	NONE_RACE = 0;
+	HUMAN = 1;
+	GNOME = 2;
+	DWARF = 3;
+	ELF = 4;
+	ORC = 5;
+}
+
+message Hero {
+	string name = 1;
+	Gender gender = 2;
+	Race race = 3;
+	uint32 hp = 4;
+	uint32 mana = 5;
+	repeated Item inventory = 6;
+}
+
+enum BUC {
+	UNCURSED = 0;
+	CURSED = 1;
+	BLESSED = 2;
+}
+
+message Item {
+	string name = 1;
+	uint32 quantity = 2;
+	BUC buc = 3;
+	bool corroded = 4;
+	int32 enchantment = 5;
+}
