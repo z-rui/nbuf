@@ -6,6 +6,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern const char *
 nbuf_EnumType_value_to_name(nbuf_EnumType *enm, uint16_t val);
 
@@ -24,5 +28,9 @@ nbuf_Schema_enumType_by_name(
 extern int
 nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
 	nbuf_Schema *schema, nbuf_MsgType *msgType);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* LIBNBUF_H */

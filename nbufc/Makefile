@@ -5,7 +5,7 @@ LDFLAGS+=
 AR=ar
 
 nbufc: nbufc.o t2b.o lex.yy.o nbuf.tab.o libnbufc.a
-libnbufc.a: b2h.o b2t.o b2c.o
+libnbufc.a: b2h.o b2t.o b2c.o b2hh.o
 	$(AR) rcs $@ $^
 
 lex.yy.c lex.yy.h: nbuf.l
@@ -15,6 +15,7 @@ nbuf.tab.c nbuf.tab.h: nbuf.y
 	bison -d $<
 
 b2h.o: b2h.c ../include/nbuf.nb.h ../include/nbuf.h ../include/libnbufc.h
+b2hh.o: b2hh.c ../include/nbuf.nb.h ../include/nbuf.h ../include/libnbufc.h
 b2c.o: b2c.c ../include/nbuf.nb.h ../include/nbuf.h ../include/libnbufc.h
 b2t.o: b2t.c ../include/nbuf.nb.h ../include/nbuf.h ../include/libnbufc.h
 lex.yy.o: lex.yy.c nbuf.tab.h

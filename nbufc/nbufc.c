@@ -33,6 +33,7 @@ usage()
 	printf("  t            io    textual schema\n");
 	printf("  b            io    binary schema\n");
 	printf("  h             o    c declarations\n");
+	printf("  +             o    c++ declarations\n");
 	printf("  c             o    c definitions\n");
 }
 
@@ -126,6 +127,9 @@ do_output(char ofmt)
 		break;
 	case 'h':
 		nbuf_b2h(&buf, yyout, srcname);
+		break;
+	case 'H':
+		nbuf_b2hh(&buf, yyout, srcname);
 		break;
 	case 'c':
 		nbuf_b2c(&buf, yyout, srcname);
