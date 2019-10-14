@@ -417,6 +417,8 @@ outhdr(struct nbuf_b2h *b2h, FILE *fout, const char *srcname)
 		for (char *p = strchr(pkgName, '.'); p; p = strchr(p, '.'))
 			dots++;
 		/* pkg.name => pkg::name, PKG_NAME_NB_HPP */
+		/* FIXME this won't work.  need to figure out a way
+		 * for nested namespaces */
 		char *prefix = b2h->prefix = malloc(len + dots + 1);
 		char *upper_prefix = b2h->upper_prefix = malloc(len + 8);
 		for (i = 0; i < len; i++) {
@@ -442,7 +444,9 @@ outhdr(struct nbuf_b2h *b2h, FILE *fout, const char *srcname)
 		b2h->upper_prefix, b2h->upper_prefix);
 	fprintf(fout, "#include \"nbuf.h\"\n");
 	fprintf(fout, "#include \"nbuf.nb.h\"\n");
-	fprintf(fout, "\nnamespace %s {\n", b2h->prefix);
+
+	if (b2h->prefix[0] != '\0')
+		fprintf(fout, "\nnamespace %s {\n", b2h->prefix);
 }
 
 static void
@@ -451,7 +455,8 @@ outftr(struct nbuf_b2h *b2h, FILE *fout)
 	size_t n;
 	size_t i;
 
-	fprintf(fout, "\n}  // namespace %s\n", b2h->prefix);
+	if (b2h->prefix[0] != '\0')
+		fprintf(fout, "\n}  // namespace %s\n", b2h->prefix);
 	n = nbuf_Schema_enumTypes_size(&b2h->schema);
 	fprintf(fout, "\nextern nbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
