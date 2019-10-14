@@ -34,6 +34,7 @@ message MsgType1 {
 Type can be any message type, enum type, or one of the following
 built-in types:
 
+* `bool`
 * `{uint,int}{8,16,32,64}`
 * `float`, `double`
 * `string`
@@ -54,7 +55,7 @@ to the write buffer.
 `pkgName_EnumType1_value1`, etc.
 * Message types are named like `pkgName_MsgType1`.
 * The getter of `field1` is named `pkgName_MsgType1_field1()`.
-* The setter named `pkgName_MsgType1_set_field1()`.
+* The setter is named `pkgName_MsgType1_set_field1()`.
 * For list fields, there is an additional argument in the getter/setter
 to indicate the index.  Additionally, `pkgName_MsgType1_field1_size()`
 returns the size of the list.
@@ -74,7 +75,7 @@ This is mostly the same as the C API, expect some syntactic changes.
 * `pkgName` becomes a namespace, so `pkgName_xxx` now becomes `pkgName::xxx`.
   * The user can use `using namespace` to avoid repeating `pkgName::`.
 * The enum types are defined as `enum class`es.
-  * `pkgName::EnumType1` refers to the type
+  * `pkgName::EnumType1` refers to the type.
   * `pkgName::EnumType1::value1` refers to the value.
 * The message types now have methods.
   * `pkgName_MsgType1_xxx()` in the C API becomes `pkgName::MsgType1::xxx()`.
