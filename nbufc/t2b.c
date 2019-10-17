@@ -249,6 +249,7 @@ outmsgs()
 {
 	struct msgType *m;
 	int id;
+	int alignment = 0;
 
 	clear_padding_spaces();
 	for (id = 0, m = schema.msgs; m; id++, m = m->next) {
@@ -283,10 +284,14 @@ outmsgs()
 				if (!d->list) {
 					offset = calculate_offset(&ssize, ent->size);
 					nbuf_FieldDesc_set_tag0(&de, offset);
+					if (alignment < ent->size)
+						alignment = ent->size;
 				} else {
 			case nbuf_Kind_PTR:
 			case nbuf_Kind_STR:
 					nbuf_FieldDesc_set_tag0(&de, psize++);
+					if (alignment < NBUF_WORD_SZ)
+						alignment = NBUF_WORD_SZ;
 				}
 				break;
 			}
@@ -304,8 +309,10 @@ outmsgs()
 				break;
 			}
 		}
-		if (psize > 0)
-			ssize = NBUF_ROUNDUP(ssize, NBUF_WORD_SZ);
+		if (alignment > 1)
+			ssize = NBUF_ROUNDUP(ssize +
+				psize * NBUF_WORD_SZ, alignment)
+				- psize * NBUF_WORD_SZ;
 		nbuf_MsgType_set_ssize(&ms, ssize);
 		nbuf_MsgType_set_psize(&ms, psize);
 		clear_padding_spaces();
