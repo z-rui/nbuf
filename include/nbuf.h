@@ -149,24 +149,24 @@ nbuf_obj_init(
 		return;
 #endif
 	hdr = nbuf_read_int_safe(rr->buf, base, sizeof hdr);
+	base += sizeof hdr;
+	rr->base = base;
 	rr->nelem = hdr & ((1ULL<<NBUF_WORD_BIT)-1);
 	hdr >>= NBUF_WORD_BIT;
+	rr->ssize = hdr & ((1<<NBUF_HALF_WORD_BIT)-1);
+	rr->psize = hdr >> NBUF_HALF_WORD_BIT;
 
 	if (rr->nelem > 0) {
-		base += sizeof hdr;
-		rr->ssize = hdr & ((1<<NBUF_HALF_WORD_BIT)-1);
-		rr->psize = hdr >> NBUF_HALF_WORD_BIT;
 #ifndef NBUF_UNSAFE
 		size_t elemsz = nbuf_elemsz(rr);
 		size_t totalsz = (elemsz == 0)
 			? (rr->nelem + 7) / 8 : elemsz * rr->nelem;
 		if (totalsz == 0 || !nbuf_bounds_check(rr->buf, base, totalsz)) {
 			/* corrupted/malicious message */
-			rr->nelem = rr->ssize = rr->psize = 0;
+			rr->base = rr->nelem = rr->ssize = rr->psize = 0;
 			return;
 		}
 #endif
-		rr->base = base;
 	}
 }
 
