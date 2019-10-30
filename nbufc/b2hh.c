@@ -458,7 +458,8 @@ outftr(struct nbuf_b2h *b2h, FILE *fout)
 	if (b2h->prefix[0] != '\0')
 		fprintf(fout, "\n}  // namespace %s\n", b2h->prefix);
 	n = nbuf_Schema_enumTypes_size(&b2h->schema);
-	fprintf(fout, "\nextern nbuf_EnumType\n");
+	if (n > 0)
+		fprintf(fout, "\nextern nbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2h->schema, i);
 		const char *ename = nbuf_EnumType_name(&e, NULL);
@@ -466,7 +467,8 @@ outftr(struct nbuf_b2h *b2h, FILE *fout)
 			b2h->prefix, ename, (i == n-1) ? ';' : ',');
 	}
 	n = nbuf_Schema_msgTypes_size(&b2h->schema);
-	fprintf(fout, "\nextern nbuf_MsgType\n");
+	if (n > 0)
+		fprintf(fout, "\nextern nbuf_MsgType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2h->schema, i);
 		const char *mname = nbuf_MsgType_name(&m, NULL);

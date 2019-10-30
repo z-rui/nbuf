@@ -38,7 +38,8 @@ genenums(struct nbuf_b2c *b2c, FILE *fout)
 	size_t n = nbuf_Schema_enumTypes_size(&b2c->schema);
 	size_t i;
 
-	fprintf(fout, "\nnbuf_EnumType\n");
+	if (n > 0)
+		fprintf(fout, "\nnbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2c->schema, i);
 		const char *ename = nbuf_EnumType_name(&e, NULL);
@@ -56,7 +57,8 @@ genmsgs(struct nbuf_b2c *b2c, FILE *fout)
 	size_t n = nbuf_Schema_msgTypes_size(&b2c->schema);
 	size_t i;
 
-	fprintf(fout, "\nnbuf_MsgType\n");
+	if (n > 0)
+		fprintf(fout, "\nnbuf_MsgType\n");
 	for (i = 0; i < n; i++) {
 		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2c->schema, i);
 		const char *mname = nbuf_MsgType_name(&m, NULL);
