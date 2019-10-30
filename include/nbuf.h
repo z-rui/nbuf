@@ -42,10 +42,7 @@ nbuf_read_int_unsafe(const void *ptr, size_t sz)
 
 struct nbuf_buffer {
 	char *base;
-	size_t len;
-	size_t cap;
-	void *(*realloc)(void *, size_t, void *userdata);
-	void *userdata;
+	size_t len, cap;
 };
 
 static inline void
@@ -54,8 +51,6 @@ nbuf_init_read(struct nbuf_buffer *buf, const void *base, size_t size)
 	buf->base = (char *) base;
 	buf->len = size;
 	buf->cap = 0;  // for assert to catch writing to read buffers
-	buf->realloc = NULL;
-	buf->userdata = NULL;
 }
 
 static inline bool
@@ -63,8 +58,6 @@ nbuf_init_write(struct nbuf_buffer *buf, const void *base, size_t size)
 {
 	buf->base = (char *) ((base) ? base : malloc(size));
 	buf->len = buf->cap = size;
-	buf->realloc = NULL;
-	buf->userdata = NULL;
 	return buf->base != NULL;
 }
 
@@ -77,9 +70,7 @@ nbuf_reserve(struct nbuf_buffer *buf, size_t inc)
 		size_t cap = NBUF_ROUNDUP(buf->len + inc, NBUF_ALLOC_INC);
 		if (cap <= buf->cap)
 			return false;
-		char *base = (char *) ((buf->realloc)
-			? buf->realloc(buf->base, cap, buf->userdata)
-			: realloc(buf->base, cap));
+		char *base = (char *) realloc(buf->base, cap);
 		if (base == NULL)
 			return false;
 		buf->base = base;
