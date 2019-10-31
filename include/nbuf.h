@@ -340,9 +340,18 @@ static inline void
 nbuf_resize(struct nbuf_obj *r, size_t nelem)
 {
 	size_t elemsz = nbuf_elemsz(r);
-	/* FIXME this is wrong for []bool */
-	size_t end = NBUF_ROUNDUP(r->base + r->nelem * elemsz, NBUF_ALIGN);
-	size_t newend = NBUF_ROUNDUP(r->base + nelem * elemsz, NBUF_ALIGN);
+	size_t end, newend;
+
+	end = newend = r->base;
+	if (elemsz != 0) {
+		end += r->nelem * elemsz;
+		newend += nelem * elemsz;
+	} else {
+		end += (r->nelem+7) / 8;
+		newend += (nelem+7) / 8;
+	}
+	end = NBUF_ROUNDUP(end, NBUF_ALIGN);
+	newend = NBUF_ROUNDUP(newend, NBUF_ALIGN);
 	assert(nelem < UINT32_MAX);
 	if (end != r->buf->len)
 		/* resizing an object not at the end of the buffer
@@ -351,6 +360,7 @@ nbuf_resize(struct nbuf_obj *r, size_t nelem)
 	if (newend > end && !nbuf_reserve(r->buf, newend - end))
 		return;
 	assert(newend <= r->buf->cap);
+	memset(r->buf->base + end, 0, newend - end);
 	r->buf->len = newend;
 	r->nelem = nelem;
 	nbuf_write_int_safe(r->buf, r->base - NBUF_WORD_SZ*2, NBUF_WORD_SZ, nelem);
