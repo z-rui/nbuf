@@ -12,6 +12,26 @@ skipline(struct nbuf_lexer *l)
 
 	while ((ch = getc(l->fin)) != EOF && ch != '\n')
 		;
+	ungetc(ch, l->fin);
+}
+
+static void
+skiplong(struct nbuf_lexer *l)
+{
+	int ch;
+
+	ch = getc(l->fin);
+	while (ch != EOF) {
+		if (ch == '*') {
+			ch = getc(l->fin);
+			if (ch == '/')
+				break;
+		} else {
+			ch = getc(l->fin);
+		}
+	}
+	if (ch == EOF)
+		l->error(l, "comment is not closed at EOF");
 }
 
 static bool addchr(struct nbuf_buffer *buf, int ch)
@@ -181,6 +201,9 @@ again:
 		} else if (ch == '\n') {
 			l->error(l, "newline within string literal");
 			l->lineno++;
+		} else if (ch == EOF) {
+			l->error(l, "string is not closed at EOF");
+			break;
 		}
 		NEXT;
 	}
@@ -226,9 +249,16 @@ reinput:
 	ch = skipspaces(l);
 
 	switch (ch) {
+	case '/':
+		ch = getc(l->fin);
+		if (ch == '*') {
+			skiplong(l);
+		} else if (ch == '/') {
+			skipline(l);
+		}
+		goto reinput;
 	case '#':
 		skipline(l);
-		l->lineno++;
 		goto reinput;
 	case '"':
 		return scanstr(l, ch);
