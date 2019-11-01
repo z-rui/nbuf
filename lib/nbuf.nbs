@@ -11,32 +11,32 @@ enum Kind {
 }
 
 message Schema {
-	msgTypes: []MsgType  // 0
-	enumTypes: []EnumType  // 1
-	pkgName: string  // 2
-}  // (0, 3)
+	msgTypes: []MsgType  // p0
+	enumTypes: []EnumType  // p1
+	pkgName: string  // p2
+}  // (0s, 3p)
 
 message EnumDesc {
-	name: string  // 0
-	value: uint16  // 0
-}  // (4, 1)
+	name: string  // p0
+	value: uint16  // s0
+}  // (4s, 1p)
 
 message EnumType {
-	name: string  // 0
-	values: []EnumDesc  // 1
-}  // (0, 2)
+	name: string  // p0
+	values: []EnumDesc  // p1
+}  // (0s, 2p)
 
 message FieldDesc {
-	name: string  // 0
-	kind: Kind  // 0
-	list: bool  // 16
-	tag0: uint32  // 4
-	tag1: uint32  // 8
-}  // (12, 1)
+	name: string  // p0
+	kind: Kind  // s0
+	list: bool  // b16
+	tag0: uint32  // s4
+	tag1: uint32  // s8
+}  // (12s, 1p)
 
 message MsgType {
-	name: string  // 0
-	fields: []FieldDesc  // 1
-	ssize: uint16  // 0
-	psize: uint16  // 2
-}  // (4, 2)
+	name: string  // p0
+	fields: []FieldDesc  // p1
+	ssize: uint16  // s0
+	psize: uint16  // s2
+}  // (4s, 2p)

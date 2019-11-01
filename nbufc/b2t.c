@@ -70,13 +70,16 @@ print_msgtype(nbuf_Schema *schema, FILE *fout,
 	for (i = 0; i < n; i++) {
 		field = nbuf_MsgType_fields(&msgType, i);
 		kind = nbuf_FieldDesc_kind(&field);
-		fprintf(fout, "\t%s: %s%s  // %u\n",
+		fprintf(fout, "\t%s: %s%s  // %c%u\n",
 			nbuf_FieldDesc_name(&field, NULL),
 			nbuf_FieldDesc_list(&field) ? "[]" : "",
 			typestr(schema, kind, nbuf_FieldDesc_tag1(&field)),
+			(kind == nbuf_Kind_PTR || kind == nbuf_Kind_STR ||
+				nbuf_FieldDesc_list(&field)) ? 'p' :
+				(kind == nbuf_Kind_BOOL) ? 'b' : 's',
 			nbuf_FieldDesc_tag0(&field));
 	}
-	fprintf(fout, "}  // (%u, %u)\n",
+	fprintf(fout, "}  // (%us, %up)\n",
 		nbuf_MsgType_ssize(&msgType),
 		nbuf_MsgType_psize(&msgType));
 }
