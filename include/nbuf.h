@@ -55,7 +55,8 @@ static inline bool
 nbuf_init_write(struct nbuf_buffer *buf, const void *base, size_t size)
 {
 	buf->base = (char *) ((base) ? base : (size) ? malloc(size) : NULL);
-	buf->len = buf->cap = size;
+	buf->len = 0;
+	buf->cap = size;
 	return buf->base != NULL;
 }
 

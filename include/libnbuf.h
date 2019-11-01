@@ -78,6 +78,34 @@ nbuf_pool_serialize(struct nbuf_buffer *buf, const struct nbuf_pool *pool);
 extern void
 nbuf_pool_free(struct nbuf_pool *pool);
 
+/* lexer */
+
+typedef enum {
+	nbuf_Token_UNK = 256,
+	nbuf_Token_ID,
+	nbuf_Token_INT,
+	nbuf_Token_FLT,
+	nbuf_Token_STR,
+} nbuf_Token;
+
+struct nbuf_lexer {
+	FILE *fin;
+	int lineno;
+	void (*error)(struct nbuf_lexer *l, const char *fmt, ...);
+	union {
+		int64_t i;
+		uint64_t u;
+		double f;
+		struct nbuf_buffer s;
+	} u;
+};
+
+extern void
+nbuf_lex_init(struct nbuf_lexer *l, FILE *fin);
+
+extern nbuf_Token
+nbuf_lex(struct nbuf_lexer *l);
+
 #ifdef __cplusplus
 }
 #endif

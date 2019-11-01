@@ -6,7 +6,7 @@ AR=ar
 
 all: libnbuf.a
 
-libnbuf.a: print.o refl.o pool.o util.o
+libnbuf.a: print.o refl.o pool.o util.o token.o
 	$(AR) rcs $@ $^
 
 print.o: print.c ../include/libnbuf.h ../include/nbuf.h \
