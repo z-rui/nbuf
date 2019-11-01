@@ -1,5 +1,4 @@
 %{
-#include "lex.yy.h"
 #include "textnb.tab.h"
 #include "libnbuf.h"
 
@@ -10,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern int yylex();
+extern int yylineno;
 static void yyerror(const char *fmt, ...);
 
 extern nbuf_Schema schema;

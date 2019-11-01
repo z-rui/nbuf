@@ -1,3 +1,5 @@
+#include "textnb.tab.h"
+
 #include "libnbuf.h"
 
 #include <stdio.h>
@@ -6,8 +8,6 @@
 nbuf_Schema schema;
 nbuf_MsgType rootType;
 struct nbuf_buffer buf;
-
-extern int yyparse(void);
 
 #define die(fmt, ...) do { \
 	fprintf(stderr, fmt"\n", ##__VA_ARGS__); \
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 {
 	const char *rootTypeName = NULL;
 #if YYDEBUG
-	yydebug = 0;
+	yydebug = 1;
 #endif
 	--argc;
 	++argv;
