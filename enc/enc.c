@@ -1,40 +1,38 @@
-#include "textnb.tab.h"
-
 #include "libnbuf.h"
 
 #include <stdio.h>
 #include <string.h>
-
-nbuf_Schema schema;
-nbuf_MsgType rootType;
-struct nbuf_buffer buf;
 
 #define die(fmt, ...) do { \
 	fprintf(stderr, fmt"\n", ##__VA_ARGS__); \
 	exit(1); \
 } while (0)
 
-static void
-load_schema(const char *path)
+static nbuf_Schema
+load_schema(struct nbuf_buffer *buf, const char *path)
 {
-	static struct nbuf_buffer buf;
-
 	FILE *f = fopen(path, "rb");
 	if (f == NULL) {
 		perror("fopen");
 		die("open error");
 	}
-	if (!nbuf_load_file(&buf, f)) {
+	nbuf_init_read(buf, NULL, 0);
+	if (!nbuf_load_file(buf, f)) {
 		perror("nbuf_load_file");
 		die("read error");
 	}
 	fclose(f);
-	schema = nbuf_get_Schema(&buf);
+	return nbuf_get_Schema(buf);
 }
 
 int main(int argc, char *argv[])
 {
 	const char *rootTypeName = NULL;
+	struct nbuf_lexer lex;
+	nbuf_Schema schema;
+	nbuf_MsgType rootType;
+	struct nbuf_buffer schema_buf, obj_buf;
+
 #if YYDEBUG
 	yydebug = 1;
 #endif
@@ -53,7 +51,7 @@ int main(int argc, char *argv[])
 	}
 	if (argc != 1)
 		die("need exactly 1 argument, got %d", argc);
-	load_schema(argv[0]);
+	schema = load_schema(&schema_buf, argv[0]);
 	if (rootTypeName) {
 		if (!nbuf_Schema_msgType_by_name(&rootType, &schema, rootTypeName))
 			die("no definition of message %s", rootTypeName);
@@ -63,9 +61,12 @@ int main(int argc, char *argv[])
 		die("no definition of messages");
 	}
 
-	nbuf_init_write(&buf, NULL, 0);
-	yyparse();
-	fwrite(buf.base, 1, buf.len, stdout);
-	nbuf_free(&buf);
+	nbuf_init_write(&obj_buf, NULL, 0);
+	nbuf_lex_init(&lex, stdin);
+	if (!nbuf_parse(&obj_buf, &lex, &schema, &rootType))
+		die("parse failed");
+	fwrite(obj_buf.base, 1, obj_buf.len, stdout);
+	nbuf_free(&schema_buf);
+	nbuf_free(&obj_buf);
 	return 0;
 }

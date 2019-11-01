@@ -78,7 +78,7 @@ nbuf_pool_serialize(struct nbuf_buffer *buf, const struct nbuf_pool *pool);
 extern void
 nbuf_pool_free(struct nbuf_pool *pool);
 
-/* lexer */
+/* parser */
 
 typedef enum {
 	nbuf_Token_UNK = 256,
@@ -105,6 +105,10 @@ nbuf_lex_init(struct nbuf_lexer *l, FILE *fin);
 
 extern nbuf_Token
 nbuf_lex(struct nbuf_lexer *l);
+
+extern bool
+nbuf_parse(struct nbuf_buffer *buf, struct nbuf_lexer *l,
+	nbuf_Schema *schema, nbuf_MsgType *msgType);
 
 #ifdef __cplusplus
 }
