@@ -1,11 +1,12 @@
 %{
 #include "nbuf.tab.h"
-#include "lex.yy.h"
 #include "t2b.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
+extern int yylineno;
+extern int yylex();
 static void yyerror(const char *);
 
 static struct enumType **elink;

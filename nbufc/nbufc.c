@@ -1,6 +1,7 @@
 #include "libnbuf.h"
 #include "libnbufc.h"
 #include "t2b.h"
+#include "nbuf.tab.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +13,6 @@
 } while (0)
 
 extern FILE *yyin, *yyout;
-extern int yyparse();
 
 static const char *progname;
 static const char *srcname = "-";
@@ -131,6 +131,9 @@ main(int argc, char *argv[])
 	int rc = 0;
 	const char *arg;
 
+#if YYDEBUG
+	yydebug = 1;
+#endif
 	nbuf_init_write(&buf, NULL, 0);
 	for (progname = *argv++; (arg = *argv) && arg[0] == '-'; ++argv) {
 		switch (arg[1]) {
