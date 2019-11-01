@@ -118,6 +118,18 @@ nomem:
 	return nbuf_Token_UNK;
 }
 
+static int
+skipspaces(struct nbuf_lexer *l)
+{
+	int ch;
+
+	do
+		if ((ch = getc(l->fin)) == '\n')
+			l->lineno++;
+	while (isspace(ch));
+	return ch;
+}
+
 static nbuf_Token
 scanstr(struct nbuf_lexer *l, int ch)
 {
@@ -168,12 +180,11 @@ again:
 				l->error(l, "bad escape sequence");
 		} else if (ch == '\n') {
 			l->error(l, "newline within string literal");
+			l->lineno++;
 		}
 		NEXT;
 	}
-	do
-		ch = getc(l->fin);
-	while (isspace(ch));
+	ch = skipspaces(l);
 	if (ch == delim)
 		goto again;
 	ungetc(ch, l->fin);
@@ -212,10 +223,7 @@ nbuf_lex(struct nbuf_lexer *l)
 	int ch;
 
 reinput:
-	do
-		if ((ch = getc(l->fin)) == '\n')
-			l->lineno++;
-	while (isspace(ch));
+	ch = skipspaces(l);
 
 	switch (ch) {
 	case '#':
