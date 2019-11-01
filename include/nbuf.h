@@ -13,9 +13,7 @@
 #define NBUF_HALF_WORD_BIT 16
 #define NBUF_WORD_BIT 32
 #define NBUF_ALIGN 8
-#ifndef NBUF_ALLOC_INC
-# define NBUF_ALLOC_INC 4096
-#endif
+#define NBUF_ALLOC_MIN 64
 #define NBUF_ROUNDUP(x, n) (((x)+(n-1))/(n)*(n))
 
 static inline  int64_t
@@ -64,14 +62,16 @@ nbuf_init_write(struct nbuf_buffer *buf, const void *base, size_t size)
 static inline bool
 nbuf_reserve(struct nbuf_buffer *buf, size_t inc)
 {
-	assert(buf->cap >= buf->len);
-	if (inc > buf->cap - buf->len) {
-		/* out of space */
-		size_t cap = NBUF_ROUNDUP(buf->len + inc, NBUF_ALLOC_INC);
-		if (cap <= buf->cap)
+	size_t cap = buf->cap;
+	assert(cap >= buf->len);
+	if (cap == 0)
+		cap = NBUF_ALLOC_MIN;
+	while (inc > cap - buf->len)
+		if (!(cap *= 2))
 			return false;
-		char *base = (char *) realloc(buf->base, cap);
-		if (base == NULL)
+	if (cap > buf->cap) {
+		char *base;
+		if ((base = (char *) realloc(buf->base, cap)) == NULL)
 			return false;
 		buf->base = base;
 		buf->cap = cap;

@@ -4,7 +4,8 @@ CFLAGS+=-g -O2
 LDFLAGS+=
 AR=ar
 
-nbufc: nbufc.o t2b.o lex.yy.o nbuf.tab.o libnbufc.a
+nbufc: nbufc.o t2b.o lex.yy.o nbuf.tab.o libnbufc.a ../lib/libnbuf.a
+
 libnbufc.a: b2h.o b2t.o b2c.o b2hh.o
 	$(AR) rcs $@ $^
 

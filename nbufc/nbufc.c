@@ -1,4 +1,4 @@
-#include "nbuf.h"
+#include "libnbuf.h"
 #include "libnbufc.h"
 #include "t2b.h"
 
@@ -65,23 +65,6 @@ myopen(const char *path, const char *mode)
 }
 
 static void
-load(struct nbuf_buffer *buf)
-{
-	for (;;) {
-		size_t nread;
-		nbuf_reserve(buf, NBUF_ALLOC_INC);
-		nread = fread(buf->base + buf->len, 1, NBUF_ALLOC_INC, yyin);
-		buf->len += nread;
-		if (nread < NBUF_ALLOC_INC)
-			break;
-	}
-	if (ferror(yyin)) {
-		perror(progname);
-		die("read error\n");
-	}
-}
-
-static void
 dump(struct nbuf_buffer *buf)
 {
 	fwrite(buf->base, buf->len, 1, yyout);
@@ -103,7 +86,8 @@ do_input(char ifmt)
 		input_done = true;
 		break;
 	case 'b':
-		load(&buf);
+		if (!nbuf_load_file(&buf, yyin))
+			die("read error");
 		input_done = true;
 		break;
 	}
