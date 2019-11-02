@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+# include <fcntl.h>
+# include <io.h>
+#endif
 
 #define die(...) do { \
 	fprintf(stderr, __VA_ARGS__); \
@@ -57,6 +61,15 @@ load_schema(struct nbuf_buffer *buf, const char *path, int mode)
 }
 
 static void
+outbin(struct nbuf_buffer *buf)
+{
+#ifdef _WIN32
+	_setmode(_fileno(stdout), _O_BINARY);
+#endif
+	fwrite(buf->base, 1, buf->len, stdout);
+}
+
+static void
 enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 {
 	struct nbuf_buffer obj_buf;
@@ -76,6 +89,9 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 	if (mode == 'd') {
 		struct nbuf_obj o = {&obj_buf};
 		nbuf_init_read(&obj_buf, NULL, 0);
+#ifdef _WIN32
+		_setmode(_fileno(stdin), _O_BINARY);
+#endif
 		nbuf_load_file(&obj_buf, stdin);
 		nbuf_obj_init(&o, 0);
 		nbuf_print(&o, stdout, 2, &schema, &rootType);
@@ -84,7 +100,7 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 		nbuf_lex_init(&l, stdin);
 		nbuf_init_write(&obj_buf, NULL, 0);
 		nbuf_parse(&obj_buf, &l, &schema, &rootType);
-		fwrite(obj_buf.base, 1, obj_buf.len, stdout);
+		outbin(&obj_buf);
 	}
 	nbuf_free(&obj_buf);
 }
@@ -105,20 +121,12 @@ main(int argc, char *argv[])
 		return 1;
 	}
 	load_schema(&buf, argv[2], argv[1][0]);
-	if (!freopen(NULL, "rb", stdin)) {
-		perror("freopen");
-		die("freopen(stdin) failed");
-	};
-	if (!freopen(NULL, "wb", stdout)) {
-		perror("freopen");
-		die("freopen(stdout) failed");
-	}
 	switch (argv[1][0]) {
 	case 'a':
 		nbuf_b2t(&buf, stdout);
 		break;
 	case 'b':
-		fwrite(buf.base, 1, buf.len, stdout);
+		outbin(&buf);
 		break;
 	case 'c':
 		nbuf_b2c(&buf, stdout, argv[2]);
