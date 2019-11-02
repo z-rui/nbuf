@@ -82,6 +82,7 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 	} else {
 		struct nbuf_lexer l;
 		nbuf_lex_init(&l, stdin);
+		nbuf_init_write(&obj_buf, NULL, 0);
 		nbuf_parse(&obj_buf, &l, &schema, &rootType);
 		fwrite(obj_buf.base, 1, obj_buf.len, stdout);
 	}
