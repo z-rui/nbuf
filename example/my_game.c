@@ -62,4 +62,5 @@ main()
 	save(&buf); /* write something into the buffer */
 	dump(&buf); /* show the buffer content */
 	load(&buf); /* read back from the buffer */
+	nbuf_free(&buf);
 }

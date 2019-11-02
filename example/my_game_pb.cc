@@ -68,4 +68,5 @@ main()
 	save(&ss); /* write something into the buffer */
 	dump(ss.str()); /* show the buffer content */
 	load(&ss); /* read back from the buffer */
+	google::protobuf::ShutdownProtobufLibrary();
 }
