@@ -2,6 +2,7 @@ CC=gcc
 CXX=g++
 CFLAGS=-g -Wall -O2 -DNDEBUG
 CXXFLAGS=$(CFLAGS)
+NBUFC=../nbufc/nbufc
 
 all: bench_nb bench_fb bench_pb bench_cp
 
@@ -19,14 +20,17 @@ bench_cp: bench_cp.cc bench_cp.capnp.c++ bench_cp.capnp.h
 	$(CXX) $(CXXFLAGS) -o $@ bench_cp.cc bench_cp.capnp.c++ dummy.c \
 		-lcapnp -lkj
 
-bench_fb_generated.h: bench_fb.fbs
-	flatc -c bench_fb.fbs
+%_generated.h: %.fbs
+	flatc -c $<
 
-bench.nb.h: bench.nbs
-	../nbufc/nbufc -it $< -oh $@
+%.nb.h: %.bnbs
+	$(NBUFC) h $< > $@
 
-bench_pb.pb.h bench_pb.pb.cc: bench_pb.proto
-	protoc --cpp_out=. bench_pb.proto
+%.bnbs: %.nbs
+	$(NBUFC) b $< > $@
 
-bench_cp.capnp.c++ bench_cp.capnp.h: bench_cp.capnp
-	capnp compile -oc++ bench_cp.capnp
+%.pb.h %.pb.cc: %.proto
+	protoc --cpp_out=. $<
+
+%.capnp.c++ %.capnp.h: %.capnp
+	capnp compile -oc++ $<

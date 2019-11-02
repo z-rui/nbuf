@@ -12,157 +12,127 @@
 	exit(1); \
 } while (0)
 
-extern FILE *yyin, *yyout;
-
+extern FILE *yyin;
 static const char *progname;
-static const char *srcname = "-";
-static const char *outname = "-";
-static struct nbuf_buffer buf;
 
 static void
 usage()
 {
-	printf("usage: %s [-h] [-i<fmt> infile] {-o<fmt> outfile}\n\n",
-		progname);
+	printf("usage: %s cmd ...\n\n", progname);
 	printf("copyright 2019 zr\n");
-	printf("compile a schema file.\n\n");
-	printf("options:\n");
-	printf("  -i<fmt> infile     input format and filename\n");
-	printf("  -o<fmt> outfile    output format and filename\n");
-	printf("formats:\n");
-	printf("  t            io    textual schema\n");
-	printf("  b            io    binary schema\n");
-	printf("  h             o    c declarations\n");
-	printf("  +             o    c++ declarations\n");
-	printf("  c             o    c definitions\n");
-}
-
-static const char *
-flagarg(char ***pargv)
-{
-	const char *s;
-
-	s = *++*pargv;
-	if (s == NULL)
-		die("missing argument for %s\n", *--*pargv);
-	return s;
-}
-
-static FILE *
-myopen(const char *path, const char *mode)
-{
-	FILE *f;
-
-	if (strcmp(path, "-") == 0)
-		f = (mode[0] == 'r') ? stdin
-			: (mode[0] == 'w') ? stdout
-			: NULL;
-	else
-		f = fopen(path, mode);
-	if (f == NULL)
-		die("%s: cannot open file %s\n", progname, path);
-	return f;
+	printf("nbuf compiler.\n\n");
+	printf("command        input                output\n");
+	printf("  a <s>        binary schema        text schema\n");
+	printf("  b <s>        text schema          binary schema\n");
+	printf("  c <s>        binary schema        c definitions\n");
+	printf("  d <s> [m]    binary message       text message\n");
+	printf("  e <s> [m]    text message         binary message\n");
+	printf("  h <s>        binary schema        c declarations\n");
+	printf("  H <s>        binary schema        c++ declarations\n");
+	printf("\narguments\n");
+	printf("  <s>          schema file\n");
+	printf("  [m]          message type of input, default to the first\n");
+	printf("               message type in the schema.\n");
+	printf("\nmessages will be read from stdin; ");
+	printf("all output is written to stdout.\n");
 }
 
 static void
-dump(struct nbuf_buffer *buf)
+load_schema(struct nbuf_buffer *buf, const char *path, int mode)
 {
-	fwrite(buf->base, buf->len, 1, yyout);
-}
-
-static bool input_done = false;
-static bool output_done = false;
-
-static bool
-do_input(char ifmt)
-{
-	if (input_done)
-		die("cannot specify more than one input");
-	yyin = myopen(srcname, "rb");
-	switch (ifmt) {
-	case 't':
+	FILE *fin = fopen(path, "rb");
+	if (fin == NULL) {
+		perror("fopen");
+		die("open %s failed", path);
+	}
+	if (mode == 'b') {
+		yyin = fin;
 		yyparse();
-		nbuf_t2b(&buf);
-		input_done = true;
-		break;
-	case 'b':
-		if (!nbuf_load_file(&buf, yyin))
-			die("read error");
-		input_done = true;
-		break;
+		yyin = NULL;
+		nbuf_t2b(buf);
+	} else {
+		nbuf_load_file(buf, fin);
 	}
-	return input_done;
+	fclose(fin);
 }
 
-static bool
-do_output(char ofmt)
+static void
+enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 {
-	if (!input_done)
-		do_input('t');
-	if (!input_done)
-		die("input failed...why?");
-	yyout = myopen(outname, "wb");
-	switch (ofmt) {
-	case 't':
-		nbuf_b2t(&buf, yyout);
-		break;
-	case 'b':
-		dump(&buf);
-		break;
-	case 'h':
-		nbuf_b2h(&buf, yyout, srcname);
-		break;
-	case 'H':
-		nbuf_b2hh(&buf, yyout, srcname);
-		break;
-	case 'c':
-		nbuf_b2c(&buf, yyout, srcname);
-		break;
-	default:
-		return false;
+	struct nbuf_buffer obj_buf;
+	nbuf_Schema schema = nbuf_get_Schema(schema_buf);
+	nbuf_MsgType rootType;
+
+	if (rootTypeName) {
+		if (!nbuf_Schema_msgType_by_name(&rootType,
+				&schema, rootTypeName))
+			die("no message named \"%s\" defined in schema",
+				rootTypeName);
+	} else if (nbuf_Schema_msgTypes_size(&schema) > 0) {
+		rootType = nbuf_Schema_msgTypes(&schema, 0);
+	} else {
+		die("no message defined in schema");
 	}
-	output_done = true;
-	return true;
+	if (mode == 'd') {
+		struct nbuf_obj o;
+		nbuf_init_read(&obj_buf, NULL, 0);
+		nbuf_load_file(&obj_buf, stdin);
+		nbuf_obj_init(&o, 0);
+		nbuf_print(&o, stdout, 2, &schema, &rootType);
+	} else {
+		struct nbuf_lexer l;
+		nbuf_lex_init(&l, stdin);
+		nbuf_parse(&obj_buf, &l, &schema, &rootType);
+		fwrite(obj_buf.base, 1, obj_buf.len, stdout);
+	}
+	nbuf_free(&obj_buf);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int rc = 0;
-	const char *arg;
+	static struct nbuf_buffer buf;
 
 #if YYDEBUG
 	yydebug = 1;
 #endif
 	nbuf_init_write(&buf, NULL, 0);
-	for (progname = *argv++; (arg = *argv) && arg[0] == '-'; ++argv) {
-		switch (arg[1]) {
-		case 'i':
-			srcname = flagarg(&argv);
-			if (!do_input(arg[2]))
-				goto invalid_option;
-			break;
-		case 'o':
-			outname = flagarg(&argv);
-			if (!do_output(arg[2]))
-				goto invalid_option;
-			break;
-		default:
-invalid_option:
-			fprintf(stderr, "invalid option %s\n", arg);
-			rc = 1;
-			/* fallthrough */
-		case 'h':
-			usage();
-			exit(rc);
-		}
+	progname = argv[0];
+	if (argc < 3) {
+		fprintf(stderr, "expect at least 2 arguments.\n");
+		usage();
+		return 1;
 	}
-	if (!output_done)
-		do_output('t');
-
+	load_schema(&buf, argv[2], argv[1][0]);
+	if (!freopen(NULL, "rb", stdin)) {
+		perror("freopen");
+		die("freopen(stdin) failed");
+	};
+	if (!freopen(NULL, "wb", stdout)) {
+		perror("freopen");
+		die("freopen(stdout) failed");
+	}
+	switch (argv[1][0]) {
+	case 'a':
+		nbuf_b2t(&buf, stdout);
+		break;
+	case 'b':
+		fwrite(buf.base, 1, buf.len, stdout);
+		break;
+	case 'c':
+		nbuf_b2c(&buf, stdout, argv[2]);
+		break;
+	case 'd':
+	case 'e':
+		enc_dec(&buf, argv[1][0], argv[3]);
+		break;
+	case 'h':
+		nbuf_b2h(&buf, stdout, argv[2]);
+		break;
+	case 'H':
+		nbuf_b2hh(&buf, stdout, argv[2]);
+		break;
+	}
 	nbuf_free(&buf);
-	fclose(yyin);
-	fclose(yyout);
-
 	return 0;
 }

@@ -16,11 +16,14 @@ my_game++: my_game++.o my_game.nb.o ../lib/libnbuf.a
 my_game.o: my_game.c my_game.nb.h ../include/nbuf.h
 my_game++.o: my_game++.cc my_game.nb.hpp ../include/nbuf.h
 
-my_game.nb.c my_game.nb.h my_game.nb.hpp: my_game.nbs
-	$(NBUFC) -it my_game.nbs \
-		-oh my_game.nb.h \
-		-oH my_game.nb.hpp \
-		-oc my_game.nb.c
+%.nb.c: %.bnbs
+	$(NBUFC) c $< > $@
+%.nb.h: %.bnbs
+	$(NBUFC) h $< > $@
+%.nb.hpp: %.bnbs
+	$(NBUFC) H $< > $@
+%.bnbs: %.nbs
+	$(NBUFC) b $< > $@
 
 my_game_pb: my_game_pb.o my_game.pb.o
 	$(CXX) $(LDFLAGS) -o $@ $^ -lprotobuf -lpthread
