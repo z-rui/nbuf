@@ -74,7 +74,7 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 		die("no message defined in schema");
 	}
 	if (mode == 'd') {
-		struct nbuf_obj o;
+		struct nbuf_obj o = {&obj_buf};
 		nbuf_init_read(&obj_buf, NULL, 0);
 		nbuf_load_file(&obj_buf, stdin);
 		nbuf_obj_init(&o, 0);
