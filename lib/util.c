@@ -13,3 +13,10 @@ nbuf_load_file(struct nbuf_buffer *buf, FILE *fin)
 	}
 	return !ferror(fin);
 }
+
+bool
+nbuf_save_file(struct nbuf_buffer *buf, FILE *fout)
+{
+	fwrite(buf->base, 1, buf->len, fout);
+	return !ferror(fout);
+}

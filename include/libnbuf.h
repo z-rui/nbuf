@@ -40,6 +40,9 @@ nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
 extern bool
 nbuf_load_file(struct nbuf_buffer *buf, FILE *fin);
 
+extern bool
+nbuf_save_file(struct nbuf_buffer *buf, FILE *fout);
+
 /* "Scaffolding" API
  *
  * Each object has its own buffer, so it can always be resized.
