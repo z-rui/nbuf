@@ -6,7 +6,7 @@ NBUFC=$(NBUF_DIR)/nbufc/nbufc
 
 all: config.bin main
 
-main: main.o common.o $(NBUF_DIR)/lib/libnbuf.a
+main: main.o $(NBUF_DIR)/lib/libnbuf.a
 
 %.bnbs: %.nbs
 	$(NBUFC) b $< > $@
@@ -17,10 +17,5 @@ main: main.o common.o $(NBUF_DIR)/lib/libnbuf.a
 config.bin: config.textnb rpg.bnbs
 	$(NBUFC) e rpg.bnbs GameConfig < $< > $@
 
-common.o: common.c common.h rpg.nb.h ../../include/nbuf.h \
- ../../include/nbuf.nb.h ../../include/nbuf.h ../../include/nbuf.nb.h \
- ../../include/libnbuf.h
-entry.o: entry.c common.h rpg.nb.h ../../include/nbuf.h \
- ../../include/nbuf.nb.h ../../include/nbuf.h ../../include/nbuf.nb.h
-main.o: main.c rpg.nb.h ../../include/nbuf.h ../../include/nbuf.nb.h \
- ../../include/nbuf.h ../../include/nbuf.nb.h common.h
+main.o: main.c rpg.nb.h ../../include/nbuf.h \
+ ../../include/nbuf.nb.h ../../include/libnbuf.h
