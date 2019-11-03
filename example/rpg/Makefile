@@ -2,6 +2,7 @@ CC=gcc
 NBUF_DIR=../..
 CFLAGS=-I$(NBUF_DIR)/include
 CFLAGS+=-Wall -g
+CFLAGS+=-O2
 NBUFC=$(NBUF_DIR)/nbufc/nbufc
 
 all: config.bin main

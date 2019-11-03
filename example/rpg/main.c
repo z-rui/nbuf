@@ -398,11 +398,11 @@ uhitm:
 		goto mdie;
 mhitu:
 	damage = calc_damage(&monster_prop, &hero_prop_, false);
-	hero_hp -= damage;
 	printf("You are hit by%s %s, ", art, monster_name);
-	if (EQUIPPED(SHIELD) && rn(1, 100) <= 10)
+	if (EQUIPPED(SHIELD) && rn(1, 100) <= 10) {
 		printf("but your shield absorbed all the damage.\n");
-	else
+	} else {
+		hero_hp -= damage;
 		switch (damage) {
 		case 0:
 			printf("but you are not hurt at all.\n");
@@ -414,6 +414,7 @@ mhitu:
 			printf("you lose %d health points.\n", damage);
 			break;
 		}
+	}
 	if (hero_hp <= 0) {
 		printf("You die!\n");
 		printf("May your poor soul rest in peace.\n");
