@@ -1,0 +1,133 @@
+# game config
+
+# initial hero properties
+hero {
+	hp: 100
+	attack: 5
+	defend: 0
+	crit: 5
+}
+
+# item properties
+item {  # SWORD
+	name: "sword"
+	attack: 5
+	crit: 1
+}
+
+item {  # SHIELD
+	name: "shield"
+	defend: 5
+}
+
+item {  # BOW
+	name: "bow"
+}
+
+item {  # ARROW
+	name: "arrow"
+	attack: 2
+	crit: 50
+}
+
+item {  # GOLD
+	name: "gold"
+	# come on, gold is useless in the dungeon ...
+}
+
+item {  # POTION
+	name: "potion"
+	hp: 25
+}
+
+# dungeon definitions
+dungeon {  # 0
+	cls: ENTRY
+	item: SWORD
+	next: 1
+	next: 2
+}
+
+dungeon {  # 1
+	cls: BASIC
+	item: BOW
+	item: POTION
+	item: GOLD
+	next: 3
+}
+
+dungeon {  # 2
+	cls: BASIC
+	monster {
+		prop {
+			name: "Goblin"
+			hp: 20
+			attack: 5
+			defend: 0
+			crit: 1
+		}
+		item: GOLD
+		item: POTION
+		item: ARROW
+	}
+	item: ARROW
+	item: GOLD
+	next: 4
+}
+
+dungeon {  # 3
+	cls: BASIC
+	monster {
+		prop {
+			name: "Slime"
+			hp: 10
+			attack: 2
+			defend: 2
+			crit: 25
+		}
+		item: POTION
+		item: GOLD
+		item: ARROW
+	}
+	item: ARROW
+	item: POTION
+	next: 5
+}
+
+dungeon {  # 4
+	cls: BASIC
+	item: SHIELD
+	item: GOLD
+	item: POTION
+	next: 5
+}
+
+dungeon {  # 5
+	cls: PREBOSS
+	monster {
+		prop {
+			name: " SZCZW"
+			hp: 50
+			attack: 10
+			defend: 5
+			crit: 5
+		}
+		item: ARROW
+		item: ARROW
+	}
+	item: GOLD
+	next: 6
+}
+
+dungeon {  # 6
+	cls: BOSS
+	monster {
+		prop {
+			name: " ZFYYFX"
+			hp: 100
+			attack: 10
+			defend: 5
+			crit: 5
+		}
+	}
+}

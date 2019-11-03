@@ -1,0 +1,62 @@
+package rpg
+
+message Prop {
+	name: string
+        hp: uint8
+        attack: uint8
+        defend: uint8
+        crit: uint8   # percent
+}
+
+enum ItemClass {
+	// unique items
+        SWORD
+        SHIELD
+        BOW
+
+	// non-unique
+        ARROW
+        GOLD
+        POTION
+}
+
+enum DungeonClass {
+        INVALID = 0
+        ENTRY
+        BASIC
+        PREBOSS
+        BOSS
+}
+
+message Monster {
+        prop: Prop
+        item: []ItemClass
+}
+
+message Dungeon {
+        cls: DungeonClass
+        monster: []Monster
+        item: []ItemClass
+        next: []uint8 // next-dungeon id, 0 = none
+}
+
+message Hero {
+	prop: Prop
+	hp: uint8
+
+	// key: ItemClass; value:
+	//   for unique items: 0 - not own; 1 - carried; 2 - equipped
+	//   for non-unique items: quantity carried
+	inventory: []uint8
+}
+
+message GameState {
+        hero: Hero
+        dungeonId: uint8 // dungeon id
+}
+
+message GameConfig {
+        hero: Prop // initial prop
+	item: []Prop // key: ItemClass
+        dungeon: []Dungeon
+}
