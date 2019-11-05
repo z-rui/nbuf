@@ -42,6 +42,17 @@ static void cbreak(void)
 #endif
 }
 
+static int
+choice(const char *prompt, const char *choices)
+{
+	int ch;
+	do {
+		printf("%s [%s]\n", prompt, choices);
+		ch = getch();
+	} while (strchr(choices, ch) == NULL);
+	return ch;
+}
+
 rpg_GameConfig config_;
 rpg_GameState state_;
 rpg_Hero hero_;
@@ -559,29 +570,23 @@ save_state(void)
 }
 
 static
-void new_state(struct nbuf_buffer *buf)
+void reset_state(void)
 {
-	size_t len;
-	rpg_Hero hero;
-	rpg_Prop prop, prop_def;
+	size_t i;
+	rpg_Prop prop_def;
 
-	state_ = rpg_new_GameState(buf);
-	hero = rpg_GameState_init_hero(&state_);
-	prop = rpg_Hero_init_prop(&hero);
 	prop_def = rpg_GameConfig_hero(&config_);
 
-	len = strlen(save_path);
-	CHECK(len >= 4 && save_path[len-4] == '.');
-	save_path[len-4] = '\0';
-	rpg_Prop_set_name(&prop, save_path, -1);
-	save_path[len-4] = '.';
+	rpg_Prop_set_hp(&hero_prop_, rpg_Prop_hp(&prop_def));
+	rpg_Prop_set_attack(&hero_prop_, rpg_Prop_attack(&prop_def));
+	rpg_Prop_set_defend(&hero_prop_, rpg_Prop_defend(&prop_def));
+	rpg_Prop_set_crit(&hero_prop_, rpg_Prop_crit(&prop_def));
+	rpg_Hero_set_hp(&hero_, rpg_Prop_hp(&prop_def) / 2);
 
-	rpg_Prop_set_hp(&prop, rpg_Prop_hp(&prop_def));
-	rpg_Prop_set_attack(&prop, rpg_Prop_attack(&prop_def));
-	rpg_Prop_set_defend(&prop, rpg_Prop_defend(&prop_def));
-	rpg_Prop_set_crit(&prop, rpg_Prop_crit(&prop_def));
-	rpg_Hero_set_hp(&hero, rpg_Prop_hp(&prop_def) / 2);
-	rpg_Hero_init_inventory(&hero, 6);
+	for (i = 0; i < 6; i++)
+		rpg_Hero_set_inventory(&hero_, i, 0);
+
+	rpg_GameState_set_dungeonId(&state_, 0);
 }
 
 void
@@ -592,24 +597,31 @@ load_state(void)
 
 	nbuf_init_write(&buf, NULL, 0);
 	f = fopen(save_path, "rb");
-	if (f == NULL) {
-		new_state(&buf);
+	if (f == NULL || choice("A save file is available.  Load it?", "yn") == 'n') {
+		size_t i;
+
+		state_ = rpg_new_GameState(&buf);
+		hero_ = rpg_GameState_init_hero(&state_);
+		hero_prop_ = rpg_Hero_init_prop(&hero_);
+
+		i = strlen(save_path);
+		CHECK(i >= 4 && save_path[i-4] == '.');
+		save_path[i-4] = '\0';
+		rpg_Prop_set_name(&hero_prop_, save_path, -1);
+		save_path[i-4] = '.';
+
+		rpg_Hero_init_inventory(&hero_, 6);
+		reset_state();
 	} else {
-		int ch;
-		do {
-			printf("A save file is available.  Load it? [yn]\n");
-			ch = getch();
-		} while (ch != 'y' && ch != 'n');
-		if (ch == 'n')
-			new_state(&buf);
-		else if (!nbuf_load_file(&buf, f))
+		if (!nbuf_load_file(&buf, f))
 			LOG_FATAL("failed to read from file %s: %s",
 				save_path, strerror(errno));
-		fclose(f);
+		state_ = rpg_get_GameState(&buf);
+		hero_ = rpg_GameState_hero(&state_);
+		hero_prop_ = rpg_Hero_prop(&hero_);
 	}
-	state_ = rpg_get_GameState(&buf);
-	hero_ = rpg_GameState_hero(&state_);
-	hero_prop_ = rpg_Hero_prop(&hero_);
+	if (f != NULL)
+		fclose(f);
 }
 
 void
@@ -651,16 +663,16 @@ int main()
 	atexit(nocbreak);
 	load_config();
 	load_state();
+restart:
 	while (resume()) {
-		int ch;
 		save_state();
 		printf("Progress saved.\n");
-		do {
-			printf("Continue playing? [yn]\n");
-			ch = getch();
-		} while (ch != 'y' && ch != 'n');
-		if (ch == 'n')
-			break;
+		if (choice("Continue playing?", "yn") == 'n')
+			return 0;
+	}
+	if (choice("Start over?", "yn") == 'y') {
+		reset_state();
+		goto restart;
 	}
 	return 0;
 }
