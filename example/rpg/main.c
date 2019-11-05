@@ -674,5 +674,9 @@ restart:
 		reset_state();
 		goto restart;
 	}
+
+	/* make Valgrind happy */
+	nbuf_free(config_.o.buf);
+	nbuf_free(state_.o.buf);
 	return 0;
 }
