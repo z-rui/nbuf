@@ -1,4 +1,3 @@
-#include "libnbuf.h"
 #include "my_game.nb.hpp"
 
 #include <assert.h>
@@ -36,21 +35,9 @@ save(struct nbuf_buffer *buf)
 void
 dump(struct nbuf_buffer *buf)
 {
-	FILE *f = popen("xxd", "w");
+	FILE *f = fopen("my_game.bin", "wb");
 	fwrite(buf->base, buf->len, 1, f);
-	pclose(f);
-}
-
-void
-load(struct nbuf_buffer *buf)
-{
-	using namespace my_game;
-
-	Hero x = get_Hero(buf);
-	nbuf_print(&x, stdout, /*indent=*/2,
-		&my_game_refl_schema,
-		&my_game_refl_Hero);
-	assert(x.hp() == 1337);
+	fclose(f);
 }
 
 int
@@ -60,6 +47,5 @@ main()
 
 	save(&buf); /* write something into the buffer */
 	dump(&buf); /* show the buffer content */
-	load(&buf); /* read back from the buffer */
 	nbuf_free(&buf);
 }
