@@ -1,0 +1,8 @@
+message EchoReq {
+	name: string
+}
+
+message EchoResp {
+	timestamp: uint32  // unix
+	msg: string
+}
