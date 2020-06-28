@@ -12,14 +12,18 @@ libnbufc.a: b2h.o b2t.o b2c.o b2hh.o
 nbuf.tab.c nbuf.tab.h: nbuf.y
 	bison -d $<
 
+fileutil.o: fileutil.c
 b2c.o: b2c.c ../include/nbuf.nb.h ../include/nbuf.h ../include/nbuf.nb.h \
  ../include/libnbufc.h
-b2h.o: b2h.c ../include/nbuf.nb.h ../include/nbuf.h ../include/nbuf.nb.h \
- ../include/libnbufc.h
-b2hh.o: b2hh.c ../include/nbuf.nb.h ../include/nbuf.h \
+b2h.o: b2h.c b2h_common.h ../include/nbuf.nb.h ../include/nbuf.h \
  ../include/nbuf.nb.h ../include/libnbufc.h
+b2hh.o: b2hh.c b2h_common.h ../include/nbuf.nb.h ../include/nbuf.h \
+ ../include/nbuf.nb.h ../include/libnbufc.h
+b2h_main.o: b2h_main.c b2h.c b2h_common.h ../include/nbuf.nb.h \
+ ../include/nbuf.h ../include/nbuf.nb.h ../include/libnbufc.h fileutil.c
 b2t.o: b2t.c ../include/nbuf.nb.h ../include/nbuf.h ../include/nbuf.nb.h \
  ../include/libnbufc.h
+fileutil.o: fileutil.c
 lex.stub.o: lex.stub.c nbuf.tab.h ../include/libnbuf.h ../include/nbuf.h \
  ../include/nbuf.nb.h
 nbufc.o: nbufc.c ../include/libnbuf.h ../include/nbuf.h \

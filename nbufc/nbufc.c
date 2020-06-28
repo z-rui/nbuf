@@ -77,7 +77,7 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 	nbuf_MsgType rootType;
 
 	if (rootTypeName) {
-		if (!nbuf_Schema_msgType_by_name(&rootType, schema, rootTypeName))
+		if (!nbuf_find_msg(&rootType, schema, rootTypeName))
 			die("no message named \"%s\" defined in schema",
 				rootTypeName);
 	} else if (nbuf_Schema_msgTypes_size(schema) > 0) {

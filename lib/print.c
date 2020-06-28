@@ -203,9 +203,7 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType msgType)
 				break;
 			case nbuf_Kind_ENUM:
 				nwrite += fprintf(ctx->fout, "%s",
-					nbuf_EnumType_value_to_name(
-						fldEnumType,
-						nbuf_get_int(&oo, tag0, 2)));
+					nbuf_enum_name(fldEnumType, nbuf_get_int(&oo, tag0, 2)));
 				break;
 			case nbuf_Kind_PTR:
 				nwrite += fprintf(ctx->fout, "{%c", nl);

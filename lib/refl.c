@@ -1,10 +1,11 @@
 #include "libnbuf.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 
 const char *
-nbuf_EnumType_value_to_name(nbuf_EnumType enm, uint16_t val)
+nbuf_enum_name(nbuf_EnumType enm, uint16_t val)
 {
 	size_t n = nbuf_EnumType_values_size(enm);
 	size_t i;
@@ -18,7 +19,7 @@ nbuf_EnumType_value_to_name(nbuf_EnumType enm, uint16_t val)
 }
 
 uint32_t
-nbuf_EnumType_name_to_value(nbuf_EnumType enm, const char *name)
+nbuf_enum_value(nbuf_EnumType enm, const char *name)
 {
 	size_t len = strlen(name);
 	size_t n = nbuf_EnumType_values_size(enm);
@@ -36,7 +37,7 @@ nbuf_EnumType_name_to_value(nbuf_EnumType enm, const char *name)
 }
 
 bool
-nbuf_Schema_msgType_by_name(nbuf_MsgType *msg, nbuf_Schema schema, const char *name)
+nbuf_find_msg(nbuf_MsgType *msg, nbuf_Schema schema, const char *name)
 {
 	size_t len = strlen(name);
 	size_t n = nbuf_Schema_msgTypes_size(schema);
@@ -54,7 +55,7 @@ nbuf_Schema_msgType_by_name(nbuf_MsgType *msg, nbuf_Schema schema, const char *n
 }
 
 bool
-nbuf_Schema_enumType_by_name(nbuf_EnumType *enm, nbuf_Schema schema, const char *name)
+nbuf_find_enum(nbuf_EnumType *enm, nbuf_Schema schema, const char *name)
 {
 	size_t len = strlen(name);
 	size_t n = nbuf_Schema_enumTypes_size(schema);
@@ -72,7 +73,7 @@ nbuf_Schema_enumType_by_name(nbuf_EnumType *enm, nbuf_Schema schema, const char 
 }
 
 bool
-nbuf_MsgType_fields_by_name(nbuf_FieldDesc *fld, nbuf_MsgType msg, const char *name)
+nbuf_find_field(nbuf_FieldDesc *fld, nbuf_MsgType msg, const char *name)
 {
 	size_t len = strlen(name);
 	size_t n = nbuf_MsgType_fields_size(msg);

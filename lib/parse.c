@@ -24,7 +24,7 @@ getref(struct ref *ref,
 	const char *name)
 {
 	nbuf_FieldDesc fld;
-	if (!nbuf_MsgType_fields_by_name(&fld, msg, name)) {
+	if (!nbuf_find_field(&fld, msg, name)) {
 		p->l->error(p->l, "message %s has no field named \"%s\"",
 			nbuf_MsgType_name(msg, NULL), name);
 		return false;
@@ -152,7 +152,7 @@ parse_enum(struct ref *ref, struct nbuf_parser *p, const char *field_name)
 	case nbuf_Token_ID: {
 		nbuf_EnumType etype = nbuf_Schema_enumTypes(
 			p->schema, ref->tag1);
-		v = nbuf_EnumType_name_to_value(etype, l->u.s.base);
+		v = nbuf_enum_value(etype, l->u.s.base);
 		if (v == (uint32_t) -1) {
 			l->error(l, "enum %s has no value %s",
 				nbuf_EnumType_name(etype, NULL),
