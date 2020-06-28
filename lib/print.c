@@ -43,7 +43,7 @@ dumpstr(FILE *fout, const char *s, size_t n)
 }
 
 static int
-do_print_notype(struct ctx *ctx, struct nbuf_obj *o)
+do_print_notype(struct ctx *ctx, const struct nbuf_obj *o)
 {
 	int nwrite = 0;
 	char nl = (ctx->indent_inc >= 0) ? '\n' : ' ';
@@ -88,7 +88,7 @@ do_print_notype(struct ctx *ctx, struct nbuf_obj *o)
 }
 
 static struct nbuf_obj
-subobj(struct nbuf_obj *o, nbuf_FieldDesc fld)
+subobj(const struct nbuf_obj *o, nbuf_FieldDesc fld)
 {
 	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
 	unsigned tag0 = nbuf_FieldDesc_tag0(fld);
@@ -124,7 +124,7 @@ subobj(struct nbuf_obj *o, nbuf_FieldDesc fld)
 }
 
 static int
-do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType msgType)
+do_print(struct ctx *ctx, const struct nbuf_obj *o, nbuf_MsgType msgType)
 {
 	int nwrite = 0;
 	size_t i, j, n;
@@ -224,8 +224,8 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType msgType)
 }
 
 int
-nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
-	nbuf_Schema schema, nbuf_MsgType *msgType)
+nbuf_print(const struct nbuf_obj *o, FILE *fout, int indent,
+	nbuf_Schema schema, nbuf_MsgType msgType)
 {
 	struct ctx ctx;
 
@@ -233,7 +233,16 @@ nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
 	ctx.schema = schema;
 	ctx.indent = 0;
 	ctx.indent_inc = indent;
-	return msgType
-		? do_print(&ctx, o, *msgType)
-		: do_print_notype(&ctx, o);
+	return do_print(&ctx, o, msgType);
+}
+
+int
+nbuf_raw_print(const struct nbuf_obj *o, FILE *fout, int indent)
+{
+	struct ctx ctx;
+
+	ctx.fout = fout;
+	ctx.indent = 0;
+	ctx.indent_inc = indent;
+	return do_print_notype(&ctx, o);
 }

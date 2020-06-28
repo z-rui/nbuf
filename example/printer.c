@@ -15,9 +15,9 @@ load(struct nbuf_buffer *buf)
 	fclose(f);
 	x = my_game_get_Hero(buf);
 	assert(my_game_Hero_hp(&x) == 1337);
-	nbuf_print(&x.o, stdout, /*indent=*/2,
-		my_game_refl_schema,
-		&my_game_refl_Hero);
+	nbuf_raw_print((const struct nbuf_obj *) &x, stdout, /*indent=*/2);
+	nbuf_print((const struct nbuf_obj *) &x, stdout, /*indent=*/2,
+		my_game_refl_schema, my_game_refl_Hero);
 }
 
 int

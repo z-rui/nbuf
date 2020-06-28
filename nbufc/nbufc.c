@@ -93,7 +93,7 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 #endif
 		nbuf_load_file(&obj_buf, stdin);
 		nbuf_obj_init(&o, 0);
-		nbuf_print(&o, stdout, 2, schema, &rootType);
+		nbuf_print(&o, stdout, 2, schema, rootType);
 	} else {
 		struct nbuf_lexer l;
 		nbuf_lex_init(&l, stdin);

@@ -56,7 +56,7 @@ on_read(uv_stream_t *stream, ssize_t nread, struct nbuf_buffer buf)
 		die("read failed: %d", (int) nread);
 	o.buf = &buf;
 	nbuf_obj_init(&o, 0);
-	nbuf_print(&o, stdout, /*indent=*/2, schema_, &resptype_);
+	nbuf_print(&o, stdout, /*indent=*/2, schema_, resptype_);
 	nbuf_free(&buf);
 }
 

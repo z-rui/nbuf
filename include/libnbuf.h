@@ -25,8 +25,11 @@ extern bool
 nbuf_find_field(nbuf_FieldDesc *fld, nbuf_MsgType msg, const char *name);
 
 extern int
-nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
-	nbuf_Schema schema, nbuf_MsgType *msgType);
+nbuf_print(const struct nbuf_obj *o, FILE *fout, int indent,
+	nbuf_Schema schema, nbuf_MsgType msgType);
+
+extern int
+nbuf_raw_print(const struct nbuf_obj *o, FILE *fout, int indent);
 
 extern bool
 nbuf_load_file(struct nbuf_buffer *buf, FILE *fin);
