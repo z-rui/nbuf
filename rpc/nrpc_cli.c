@@ -41,9 +41,9 @@ load_schema(const char *path, const char *req_type, const char *resp_type)
 	schema_ = nbuf_get_Schema(&buf);
 	atexit(cleanup);
 
-	if (!nbuf_Schema_msgType_by_name(&reqtype_, &schema_, req_type))
+	if (!nbuf_find_msg(&reqtype_, schema_, req_type))
 		die("undefined message type: %s", req_type);
-	if (!nbuf_Schema_msgType_by_name(&resptype_, &schema_, resp_type))
+	if (!nbuf_find_msg(&resptype_, schema_, resp_type))
 		die("undefined message type: %s", resp_type);
 }
 
@@ -56,7 +56,7 @@ on_read(uv_stream_t *stream, ssize_t nread, struct nbuf_buffer buf)
 		die("read failed: %d", (int) nread);
 	o.buf = &buf;
 	nbuf_obj_init(&o, 0);
-	nbuf_print(&o, stdout, /*indent=*/2, &schema_, &resptype_);
+	nbuf_print(&o, stdout, /*indent=*/2, schema_, &resptype_);
 	nbuf_free(&buf);
 }
 
@@ -80,7 +80,7 @@ on_connect(uv_connect_t *req, int status)
 		die("connect failed: %d", status);
 	nbuf_lex_init(&lex, stdin);
 	nbuf_init_write(&buf, NULL, 0);
-	if (!nbuf_parse(&buf, &lex, &schema_, &reqtype_))
+	if (!nbuf_parse(&buf, &lex, schema_, reqtype_))
 		die("failed to parse request");
 
 	CHECK_OK(nrpc_write(&write_req, req->handle, buf, on_write_end));

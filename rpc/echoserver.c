@@ -41,7 +41,7 @@ on_read(uv_stream_t *stream, ssize_t nread, struct nbuf_buffer buf)
 	CHECK(write_req != NULL);
 
 	req = get_EchoReq(&buf);
-	name = EchoReq_name(&req, &namelen);
+	name = EchoReq_name(req, &namelen);
 	CHECK(name != NULL);
 	if (namelen) {
 		msglen = namelen + 8;
@@ -54,8 +54,8 @@ on_read(uv_stream_t *stream, ssize_t nread, struct nbuf_buffer buf)
 	}
 	nbuf_clear(&buf);
 	resp = new_EchoResp(&buf);
-	EchoResp_set_timestamp(&resp, time(NULL));
-	EchoResp_set_msg(&resp, msg, msglen);
+	EchoResp_set_timestamp(resp, time(NULL));
+	EchoResp_set_msg(resp, msg, msglen);
 	if (namelen)
 		free(msg);
 	CHECK_OK(nrpc_write(write_req, stream, buf, on_write_end));
