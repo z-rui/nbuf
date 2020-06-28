@@ -35,14 +35,14 @@ outbuf(struct nbuf_b2c *b2c, FILE *fout, struct nbuf_buffer *buf)
 static void
 genenums(struct nbuf_b2c *b2c, FILE *fout)
 {
-	size_t n = nbuf_Schema_enumTypes_size(&b2c->schema);
+	size_t n = nbuf_Schema_enumTypes_size(b2c->schema);
 	size_t i;
 
 	if (n > 0)
 		fprintf(fout, "\nnbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
-		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2c->schema, i);
-		const char *ename = nbuf_EnumType_name(&e, NULL);
+		nbuf_EnumType e = nbuf_Schema_enumTypes(b2c->schema, i);
+		const char *ename = nbuf_EnumType_name(e, NULL);
 
 		fprintf(fout, "%srefl_%s = {{&buf, %lu, 1, %u, %u}}%c\n",
 			b2c->prefix, ename,
@@ -54,14 +54,14 @@ genenums(struct nbuf_b2c *b2c, FILE *fout)
 static void
 genmsgs(struct nbuf_b2c *b2c, FILE *fout)
 {
-	size_t n = nbuf_Schema_msgTypes_size(&b2c->schema);
+	size_t n = nbuf_Schema_msgTypes_size(b2c->schema);
 	size_t i;
 
 	if (n > 0)
 		fprintf(fout, "\nnbuf_MsgType\n");
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2c->schema, i);
-		const char *mname = nbuf_MsgType_name(&m, NULL);
+		nbuf_MsgType m = nbuf_Schema_msgTypes(b2c->schema, i);
+		const char *mname = nbuf_MsgType_name(m, NULL);
 
 		fprintf(fout, "%srefl_%s = {{&buf, %lu, 1, %u, %u}}%c\n",
 			b2c->prefix, mname,
@@ -74,7 +74,7 @@ static void
 outhdr(struct nbuf_b2c *b2c, FILE *fout, const char *srcname)
 {
 	size_t i, len;
-	const char *pkgName = nbuf_Schema_pkgName(&b2c->schema, &len);
+	const char *pkgName = nbuf_Schema_pkgName(b2c->schema, &len);
 	char ch;
 
 	if (len == 0) {

@@ -16,20 +16,20 @@ struct nbuf_b2h {
 static void
 genenums(struct nbuf_b2h *b2h, FILE *fout)
 {
-	size_t n = nbuf_Schema_enumTypes_size(&b2h->schema);
+	size_t n = nbuf_Schema_enumTypes_size(b2h->schema);
 	size_t i;
 
 	for (i = 0; i < n; i++) {
-		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2h->schema, i);
-		const char *ename = nbuf_EnumType_name(&e, NULL);
-		size_t m = nbuf_EnumType_values_size(&e);
+		nbuf_EnumType e = nbuf_Schema_enumTypes(b2h->schema, i);
+		const char *ename = nbuf_EnumType_name(e, NULL);
+		size_t m = nbuf_EnumType_values_size(e);
 		size_t j;
 
 		fprintf(fout, "\nenum class %s {\n", ename);
 		for (j = 0; j < m; j++) {
-			nbuf_EnumDesc d = nbuf_EnumType_values(&e, j);
-			const char *name = nbuf_EnumDesc_name(&d, NULL);
-			uint16_t value = nbuf_EnumDesc_value(&d);
+			nbuf_EnumDesc d = nbuf_EnumType_values(e, j);
+			const char *name = nbuf_EnumDesc_name(d, NULL);
+			uint16_t value = nbuf_EnumDesc_value(d);
 			fprintf(fout, "\t%s = %d,\n", name, value);
 		}
 		fprintf(fout, "};\n");
@@ -37,11 +37,9 @@ genenums(struct nbuf_b2h *b2h, FILE *fout)
 }
 
 static const char *
-typestr(nbuf_Schema *schema, nbuf_Kind kind, uint32_t tag1)
+typestr(nbuf_Schema schema, nbuf_Kind kind, uint32_t tag1)
 {
 	static char buf[20];
-	nbuf_EnumType enm;
-	nbuf_MsgType msg;
 
 	switch (kind) {
 	case nbuf_Kind_BOOL:
@@ -58,11 +56,9 @@ typestr(nbuf_Schema *schema, nbuf_Kind kind, uint32_t tag1)
 		/* TODO or std::string_view */
 		return "const char *";
 	case nbuf_Kind_ENUM:
-		enm = nbuf_Schema_enumTypes(schema, tag1);
-		return nbuf_EnumType_name(&enm, NULL);
+		return nbuf_EnumType_name(nbuf_Schema_enumTypes(schema, tag1), NULL);
 	case nbuf_Kind_PTR:
-		msg = nbuf_Schema_msgTypes(schema, tag1);
-		return nbuf_MsgType_name(&msg, NULL);
+		return nbuf_MsgType_name(nbuf_Schema_msgTypes(schema, tag1), NULL);
 	default:
 		assert(0 && "unknown kind");
 		break;
@@ -98,12 +94,12 @@ gengetter(struct nbuf_b2h *b2h, FILE *fout,
 	nbuf_FieldDesc fld, const char *mname,
 	bool definition)
 {
-	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
-	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
-	bool list = nbuf_FieldDesc_list(&fld);
-	uint32_t tag0 = nbuf_FieldDesc_tag0(&fld);
-	uint32_t tag1 = nbuf_FieldDesc_tag1(&fld);
-	const char *typ = typestr(&b2h->schema, kind, tag1);
+	const char *fname = nbuf_FieldDesc_name(fld, NULL);
+	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
+	bool list = nbuf_FieldDesc_list(fld);
+	uint32_t tag0 = nbuf_FieldDesc_tag0(fld);
+	uint32_t tag1 = nbuf_FieldDesc_tag1(fld);
+	const char *typ = typestr(b2h->schema, kind, tag1);
 	const char *o = "this";
 	bool need_comma = false;
 
@@ -172,7 +168,7 @@ gengetter(struct nbuf_b2h *b2h, FILE *fout,
 	fprintf(fout, "}\n");
 
 	// restore tag0 in case it was zeroed
-	tag0 = nbuf_FieldDesc_tag0(&fld);
+	tag0 = nbuf_FieldDesc_tag0(fld);
 	if (list) { // size getter
 		fprintf(fout, "\nsize_t\n");
 		fprintf(fout, "%s::%s_size() const\n{\n", mname, fname);
@@ -188,12 +184,12 @@ gensetter(struct nbuf_b2h *b2h, FILE *fout,
 	nbuf_FieldDesc fld, const char *mname,
 	bool definition)
 {
-	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
-	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
-	bool list = nbuf_FieldDesc_list(&fld);
-	uint32_t tag0 = nbuf_FieldDesc_tag0(&fld);
-	uint32_t tag1 = nbuf_FieldDesc_tag1(&fld);
-	const char *typ = typestr(&b2h->schema, kind, tag1);
+	const char *fname = nbuf_FieldDesc_name(fld, NULL);
+	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
+	bool list = nbuf_FieldDesc_list(fld);
+	uint32_t tag0 = nbuf_FieldDesc_tag0(fld);
+	uint32_t tag1 = nbuf_FieldDesc_tag1(fld);
+	const char *typ = typestr(b2h->schema, kind, tag1);
 	const char *o = "this";
 
 	if (kind == nbuf_Kind_PTR)
@@ -248,27 +244,16 @@ gensetter(struct nbuf_b2h *b2h, FILE *fout,
 }
 
 static void
-getsizeinfo(nbuf_Schema *schema,
-	unsigned msgtype_id,
-	uint16_t *ssize,
-	uint16_t *psize)
-{
-	nbuf_MsgType msg = nbuf_Schema_msgTypes(schema, msgtype_id);
-	*ssize = nbuf_MsgType_ssize(&msg);
-	*psize = nbuf_MsgType_psize(&msg);
-}
-
-static void
 geniniter(struct nbuf_b2h *b2h, FILE *fout,
 	nbuf_FieldDesc fld, const char *mname,
 	bool definition)
 {
-	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
-	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
-	bool list = nbuf_FieldDesc_list(&fld);
-	uint32_t tag0 = nbuf_FieldDesc_tag0(&fld);
-	uint32_t tag1 = nbuf_FieldDesc_tag1(&fld);
-	const char *typ = typestr(&b2h->schema, kind, tag1);
+	const char *fname = nbuf_FieldDesc_name(fld, NULL);
+	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
+	bool list = nbuf_FieldDesc_list(fld);
+	uint32_t tag0 = nbuf_FieldDesc_tag0(fld);
+	uint32_t tag1 = nbuf_FieldDesc_tag1(fld);
+	const char *typ = typestr(b2h->schema, kind, tag1);
 	uint16_t ssize = 0, psize = 0;
 
 	if (kind != nbuf_Kind_PTR && !list)
@@ -294,9 +279,12 @@ geniniter(struct nbuf_b2h *b2h, FILE *fout,
 	case nbuf_Kind_STR:
 		psize = 1;
 		break;
-	case nbuf_Kind_PTR:
-		getsizeinfo(&b2h->schema, tag1, &ssize, &psize);
+	case nbuf_Kind_PTR: {
+		nbuf_MsgType msg = nbuf_Schema_msgTypes(b2h->schema, tag1);
+		ssize = nbuf_MsgType_ssize(msg);
+		psize = nbuf_MsgType_psize(msg);
 		break;
+	}
 	default:
 		assert(0 && "bad kind");
 	}
@@ -313,10 +301,10 @@ genhasfld(struct nbuf_b2h *b2h, FILE *fout,
 	nbuf_FieldDesc fld, const char *mname,
 	bool definition)
 {
-	const char *fname = nbuf_FieldDesc_name(&fld, NULL);
-	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
-	bool list = nbuf_FieldDesc_list(&fld);
-	uint32_t tag0 = nbuf_FieldDesc_tag0(&fld);
+	const char *fname = nbuf_FieldDesc_name(fld, NULL);
+	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
+	bool list = nbuf_FieldDesc_list(fld);
+	uint32_t tag0 = nbuf_FieldDesc_tag0(fld);
 
 	if (kind != nbuf_Kind_PTR && !list)
 		return;
@@ -332,31 +320,31 @@ genhasfld(struct nbuf_b2h *b2h, FILE *fout,
 static void
 genmsgs(struct nbuf_b2h *b2h, FILE *fout)
 {
-	size_t n = nbuf_Schema_msgTypes_size(&b2h->schema);
+	size_t n = nbuf_Schema_msgTypes_size(b2h->schema);
 	size_t i;
 
 	/* 1st pass - class declarations */
 	fprintf(fout, "\n");
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2h->schema, i);
-		const char *mname = nbuf_MsgType_name(&m, NULL);
+		nbuf_MsgType m = nbuf_Schema_msgTypes(b2h->schema, i);
+		const char *mname = nbuf_MsgType_name(m, NULL);
 		fprintf(fout, "struct %s;\n", mname);
 	}
 
 	/* 2nd pass - class definitions, method declarations */
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType msg = nbuf_Schema_msgTypes(&b2h->schema, i);
-		const char *mname = nbuf_MsgType_name(&msg, NULL);
-		uint16_t ssize = nbuf_MsgType_ssize(&msg);
-		uint16_t psize = nbuf_MsgType_psize(&msg);
-		size_t j, m = nbuf_MsgType_fields_size(&msg);
+		nbuf_MsgType msg = nbuf_Schema_msgTypes(b2h->schema, i);
+		const char *mname = nbuf_MsgType_name(msg, NULL);
+		uint16_t ssize = nbuf_MsgType_ssize(msg);
+		uint16_t psize = nbuf_MsgType_psize(msg);
+		size_t j, m = nbuf_MsgType_fields_size(msg);
 
 		fprintf(fout, "\nstruct %s : public nbuf_obj {\n", mname);
 		/* ctor */
 		fprintf(fout, "\texplicit %s(nbuf_obj o) : "
 			"nbuf_obj(o) {}\n\n", mname);
 		for (j = 0; j < m; j++) {
-			nbuf_FieldDesc fld = nbuf_MsgType_fields(&msg, j);
+			nbuf_FieldDesc fld = nbuf_MsgType_fields(msg, j);
 			gengetter(b2h, fout, fld, mname, false);
 			gensetter(b2h, fout, fld, mname, false);
 			geniniter(b2h, fout, fld, mname, false);
@@ -380,11 +368,11 @@ genmsgs(struct nbuf_b2h *b2h, FILE *fout)
 	}
 	/* 3rd pass - method definitions */
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType msg = nbuf_Schema_msgTypes(&b2h->schema, i);
-		const char *mname = nbuf_MsgType_name(&msg, NULL);
-		size_t j, m = nbuf_MsgType_fields_size(&msg);
+		nbuf_MsgType msg = nbuf_Schema_msgTypes(b2h->schema, i);
+		const char *mname = nbuf_MsgType_name(msg, NULL);
+		size_t j, m = nbuf_MsgType_fields_size(msg);
 		for (j = 0; j < m; j++) {
-			nbuf_FieldDesc fld = nbuf_MsgType_fields(&msg, j);
+			nbuf_FieldDesc fld = nbuf_MsgType_fields(msg, j);
 			gengetter(b2h, fout, fld, mname, true);
 			gensetter(b2h, fout, fld, mname, true);
 			geniniter(b2h, fout, fld, mname, true);
@@ -397,7 +385,7 @@ static void
 outhdr(struct nbuf_b2h *b2h, FILE *fout, const char *srcname)
 {
 	size_t i, len;
-	const char *pkgName = nbuf_Schema_pkgName(&b2h->schema, &len);
+	const char *pkgName = nbuf_Schema_pkgName(b2h->schema, &len);
 	char ch;
 
 	if (len == 0) {
@@ -457,21 +445,21 @@ outftr(struct nbuf_b2h *b2h, FILE *fout)
 
 	if (b2h->prefix[0] != '\0')
 		fprintf(fout, "\n}  // namespace %s\n", b2h->prefix);
-	n = nbuf_Schema_enumTypes_size(&b2h->schema);
+	n = nbuf_Schema_enumTypes_size(b2h->schema);
 	if (n > 0)
 		fprintf(fout, "\nextern nbuf_EnumType\n");
 	for (i = 0; i < n; i++) {
-		nbuf_EnumType e = nbuf_Schema_enumTypes(&b2h->schema, i);
-		const char *ename = nbuf_EnumType_name(&e, NULL);
+		nbuf_EnumType e = nbuf_Schema_enumTypes(b2h->schema, i);
+		const char *ename = nbuf_EnumType_name(e, NULL);
 		fprintf(fout, "%s_refl_%s%c\n",
 			b2h->prefix, ename, (i == n-1) ? ';' : ',');
 	}
-	n = nbuf_Schema_msgTypes_size(&b2h->schema);
+	n = nbuf_Schema_msgTypes_size(b2h->schema);
 	if (n > 0)
 		fprintf(fout, "\nextern nbuf_MsgType\n");
 	for (i = 0; i < n; i++) {
-		nbuf_MsgType m = nbuf_Schema_msgTypes(&b2h->schema, i);
-		const char *mname = nbuf_MsgType_name(&m, NULL);
+		nbuf_MsgType m = nbuf_Schema_msgTypes(b2h->schema, i);
+		const char *mname = nbuf_MsgType_name(m, NULL);
 		fprintf(fout, "%s_refl_%s%c\n",
 			b2h->prefix, mname, (i == n-1) ? ';' : ',');
 	}

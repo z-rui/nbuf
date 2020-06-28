@@ -113,11 +113,11 @@ makeschema(struct nbuf_buffer *buffer)
 {
 	Schema = nbuf_new_Schema(buffer);
 	if (schema.pkgName != NULL)
-		nbuf_Schema_set_pkgName(&Schema, schema.pkgName, -1);
+		nbuf_Schema_set_pkgName(Schema, schema.pkgName, -1);
 	if (enumnames > 0)
-		nbuf_Schema_init_enumTypes(&Schema, enumnames);
+		nbuf_Schema_init_enumTypes(Schema, enumnames);
 	if (msgnames > 0)
-		nbuf_Schema_init_msgTypes(&Schema, msgnames);
+		nbuf_Schema_init_msgTypes(Schema, msgnames);
 }
 
 static void
@@ -129,15 +129,15 @@ outenums()
 	for (id = 0, e = schema.enums; e; id++, e = e->next) {
 		struct enumDesc *d;
 		size_t n;
-		nbuf_EnumType en = nbuf_Schema_enumTypes(&Schema, id);
-		nbuf_EnumType_set_name(&en, e->name, -1);
+		nbuf_EnumType en = nbuf_Schema_enumTypes(Schema, id);
+		nbuf_EnumType_set_name(en, e->name, -1);
 		for (n = 0, d = e->vals; d; d = d->next)
 			n++;
-		nbuf_EnumType_init_values(&en, n);
+		nbuf_EnumType_init_values(en, n);
 		for (n = 0, d = e->vals; d; n++, d = d->next) {
-			nbuf_EnumDesc de = nbuf_EnumType_values(&en, n);
-			nbuf_EnumDesc_set_name(&de, d->name, -1);
-			nbuf_EnumDesc_set_value(&de, d->val);
+			nbuf_EnumDesc de = nbuf_EnumType_values(en, n);
+			nbuf_EnumDesc_set_name(de, d->name, -1);
+			nbuf_EnumDesc_set_value(de, d->val);
 		}
 	}
 }
@@ -256,14 +256,14 @@ outmsgs()
 		struct fldDesc *d;
 		size_t n;  /* number of fields */
 		uint16_t ssize = 0, psize = 0;
-		nbuf_MsgType ms = nbuf_Schema_msgTypes(&Schema, id);
+		nbuf_MsgType ms = nbuf_Schema_msgTypes(Schema, id);
 
-		nbuf_MsgType_set_name(&ms, m->name, -1);
+		nbuf_MsgType_set_name(ms, m->name, -1);
 		for (n = 0, d = m->flds; d; d = d->next)
 			n++;
-		nbuf_MsgType_init_fields(&ms, n);
+		nbuf_MsgType_init_fields(ms, n);
 		for (n = 0, d = m->flds; d; n++, d = d->next) {
-			nbuf_FieldDesc de = nbuf_MsgType_fields(&ms, n);
+			nbuf_FieldDesc de = nbuf_MsgType_fields(ms, n);
 			struct lookup_entry *ent;
 			size_t offset;
 
@@ -272,9 +272,9 @@ outmsgs()
 			if (ent == NULL)
 				die("BUG: cannot find type \"%s\"\n",
 					d->tname);
-			nbuf_FieldDesc_set_name(&de, d->name, -1);
-			nbuf_FieldDesc_set_list(&de, d->list);
-			nbuf_FieldDesc_set_kind(&de, ent->kind);
+			nbuf_FieldDesc_set_name(de, d->name, -1);
+			nbuf_FieldDesc_set_list(de, d->list);
+			nbuf_FieldDesc_set_kind(de, ent->kind);
 			switch (ent->kind) {
 			case nbuf_Kind_ENUM:
 			case nbuf_Kind_BOOL:
@@ -283,13 +283,13 @@ outmsgs()
 			case nbuf_Kind_FLOAT:
 				if (!d->list) {
 					offset = calculate_offset(&ssize, ent->size);
-					nbuf_FieldDesc_set_tag0(&de, offset);
+					nbuf_FieldDesc_set_tag0(de, offset);
 					if (alignment < ent->size)
 						alignment = ent->size;
 				} else {
 			case nbuf_Kind_PTR:
 			case nbuf_Kind_STR:
-					nbuf_FieldDesc_set_tag0(&de, psize++);
+					nbuf_FieldDesc_set_tag0(de, psize++);
 					if (alignment < NBUF_WORD_SZ)
 						alignment = NBUF_WORD_SZ;
 				}
@@ -298,14 +298,14 @@ outmsgs()
 			switch (ent->kind) {
 			case nbuf_Kind_ENUM:
 			case nbuf_Kind_PTR:
-				nbuf_FieldDesc_set_tag1(&de, ent->id);
+				nbuf_FieldDesc_set_tag1(de, ent->id);
 				break;
 			case nbuf_Kind_BOOL:
 			case nbuf_Kind_INT:
 			case nbuf_Kind_UINT:
 			case nbuf_Kind_FLOAT:
 			case nbuf_Kind_STR:
-				nbuf_FieldDesc_set_tag1(&de, ent->size);
+				nbuf_FieldDesc_set_tag1(de, ent->size);
 				break;
 			}
 		}
@@ -313,8 +313,8 @@ outmsgs()
 			ssize = NBUF_ROUNDUP(ssize +
 				psize * NBUF_WORD_SZ, alignment)
 				- psize * NBUF_WORD_SZ;
-		nbuf_MsgType_set_ssize(&ms, ssize);
-		nbuf_MsgType_set_psize(&ms, psize);
+		nbuf_MsgType_set_ssize(ms, ssize);
+		nbuf_MsgType_set_psize(ms, psize);
 		clear_padding_spaces();
 	}
 }

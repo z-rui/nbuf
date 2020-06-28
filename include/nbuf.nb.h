@@ -117,267 +117,255 @@ nbuf_new_MsgType(struct nbuf_buffer *buf)
 }
 
 static inline nbuf_MsgType
-nbuf_Schema_msgTypes(const nbuf_Schema *o, size_t i)
+nbuf_Schema_msgTypes(nbuf_Schema o, size_t i)
 {
-	nbuf_MsgType oo;
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 0);
-	t = nbuf_get_elem(&t, i);
-	oo.o = t;
-	return oo;
+	o.o = nbuf_get_ptr(&o.o, 0);
+	o.o = nbuf_get_elem(&o.o, i);
+	return (nbuf_MsgType) {o.o};
 }
 
 static inline size_t
-nbuf_Schema_msgTypes_size(const nbuf_Schema *o)
+nbuf_Schema_msgTypes_size(nbuf_Schema o)
 {
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 0);
-	return t.nelem;
+	return nbuf_get_ptr(&o.o, 0).nelem;
 }
 
 static inline void
-nbuf_Schema_init_msgTypes(const nbuf_Schema *o, size_t n)
+nbuf_Schema_init_msgTypes(nbuf_Schema o, size_t n)
 {
-	struct nbuf_obj oo = nbuf_create(o->o.buf, n, 4, 2);
-	nbuf_put_ptr(&o->o, 0, oo);
+	struct nbuf_obj oo = nbuf_create(o.o.buf, n, 4, 2);
+	nbuf_put_ptr(&o.o, 0, oo);
 }
 
 static inline bool
-nbuf_Schema_has_msgTypes(const nbuf_Schema *o)
+nbuf_Schema_has_msgTypes(nbuf_Schema o)
 {
-	return nbuf_has_ptr(&o->o, 0);
+	return nbuf_has_ptr(&o.o, 0);
 }
 
 static inline nbuf_EnumType
-nbuf_Schema_enumTypes(const nbuf_Schema *o, size_t i)
+nbuf_Schema_enumTypes(nbuf_Schema o, size_t i)
 {
-	nbuf_EnumType oo;
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 1);
-	t = nbuf_get_elem(&t, i);
-	oo.o = t;
-	return oo;
+	o.o = nbuf_get_ptr(&o.o, 1);
+	o.o = nbuf_get_elem(&o.o, i);
+	return (nbuf_EnumType) {o.o};
 }
 
 static inline size_t
-nbuf_Schema_enumTypes_size(const nbuf_Schema *o)
+nbuf_Schema_enumTypes_size(nbuf_Schema o)
 {
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 1);
-	return t.nelem;
+	return nbuf_get_ptr(&o.o, 1).nelem;
 }
 
 static inline void
-nbuf_Schema_init_enumTypes(const nbuf_Schema *o, size_t n)
+nbuf_Schema_init_enumTypes(nbuf_Schema o, size_t n)
 {
-	struct nbuf_obj oo = nbuf_create(o->o.buf, n, 0, 2);
-	nbuf_put_ptr(&o->o, 1, oo);
+	struct nbuf_obj oo = nbuf_create(o.o.buf, n, 0, 2);
+	nbuf_put_ptr(&o.o, 1, oo);
 }
 
 static inline bool
-nbuf_Schema_has_enumTypes(const nbuf_Schema *o)
+nbuf_Schema_has_enumTypes(nbuf_Schema o)
 {
-	return nbuf_has_ptr(&o->o, 1);
+	return nbuf_has_ptr(&o.o, 1);
 }
 
 static inline const char *
-nbuf_Schema_pkgName(const nbuf_Schema *o, size_t *lenp)
+nbuf_Schema_pkgName(nbuf_Schema o, size_t *lenp)
 {
-	return nbuf_get_str(&o->o, 2, lenp);
+	return nbuf_get_str(&o.o, 2, lenp);
 }
 
 static inline void
-nbuf_Schema_set_pkgName(const nbuf_Schema *o, const char * v, size_t len)
+nbuf_Schema_set_pkgName(nbuf_Schema o, const char * v, size_t len)
 {
-	return nbuf_put_str(&o->o, 2, v, len);
+	return nbuf_put_str(&o.o, 2, v, len);
 }
 
 static inline const char *
-nbuf_EnumDesc_name(const nbuf_EnumDesc *o, size_t *lenp)
+nbuf_EnumDesc_name(nbuf_EnumDesc o, size_t *lenp)
 {
-	return nbuf_get_str(&o->o, 0, lenp);
+	return nbuf_get_str(&o.o, 0, lenp);
 }
 
 static inline void
-nbuf_EnumDesc_set_name(const nbuf_EnumDesc *o, const char * v, size_t len)
+nbuf_EnumDesc_set_name(nbuf_EnumDesc o, const char * v, size_t len)
 {
-	return nbuf_put_str(&o->o, 0, v, len);
+	return nbuf_put_str(&o.o, 0, v, len);
 }
 
 static inline uint16_t
-nbuf_EnumDesc_value(const nbuf_EnumDesc *o)
+nbuf_EnumDesc_value(nbuf_EnumDesc o)
 {
-	return nbuf_get_int(&o->o, 0, 2);
+	return nbuf_get_int(&o.o, 0, 2);
 }
 
 static inline void
-nbuf_EnumDesc_set_value(const nbuf_EnumDesc *o, uint16_t v)
+nbuf_EnumDesc_set_value(nbuf_EnumDesc o, uint16_t v)
 {
-	return nbuf_put_int(&o->o, 0, 2, v);
+	return nbuf_put_int(&o.o, 0, 2, v);
 }
 
 static inline const char *
-nbuf_EnumType_name(const nbuf_EnumType *o, size_t *lenp)
+nbuf_EnumType_name(nbuf_EnumType o, size_t *lenp)
 {
-	return nbuf_get_str(&o->o, 0, lenp);
+	return nbuf_get_str(&o.o, 0, lenp);
 }
 
 static inline void
-nbuf_EnumType_set_name(const nbuf_EnumType *o, const char * v, size_t len)
+nbuf_EnumType_set_name(nbuf_EnumType o, const char * v, size_t len)
 {
-	return nbuf_put_str(&o->o, 0, v, len);
+	return nbuf_put_str(&o.o, 0, v, len);
 }
 
 static inline nbuf_EnumDesc
-nbuf_EnumType_values(const nbuf_EnumType *o, size_t i)
+nbuf_EnumType_values(nbuf_EnumType o, size_t i)
 {
-	nbuf_EnumDesc oo;
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 1);
-	t = nbuf_get_elem(&t, i);
-	oo.o = t;
-	return oo;
+	o.o = nbuf_get_ptr(&o.o, 1);
+	o.o = nbuf_get_elem(&o.o, i);
+	return (nbuf_EnumDesc) {o.o};
 }
 
 static inline size_t
-nbuf_EnumType_values_size(const nbuf_EnumType *o)
+nbuf_EnumType_values_size(nbuf_EnumType o)
 {
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 1);
-	return t.nelem;
+	return nbuf_get_ptr(&o.o, 1).nelem;
 }
 
 static inline void
-nbuf_EnumType_init_values(const nbuf_EnumType *o, size_t n)
+nbuf_EnumType_init_values(nbuf_EnumType o, size_t n)
 {
-	struct nbuf_obj oo = nbuf_create(o->o.buf, n, 4, 1);
-	nbuf_put_ptr(&o->o, 1, oo);
+	struct nbuf_obj oo = nbuf_create(o.o.buf, n, 4, 1);
+	nbuf_put_ptr(&o.o, 1, oo);
 }
 
 static inline bool
-nbuf_EnumType_has_values(const nbuf_EnumType *o)
+nbuf_EnumType_has_values(nbuf_EnumType o)
 {
-	return nbuf_has_ptr(&o->o, 1);
+	return nbuf_has_ptr(&o.o, 1);
 }
 
 static inline const char *
-nbuf_FieldDesc_name(const nbuf_FieldDesc *o, size_t *lenp)
+nbuf_FieldDesc_name(nbuf_FieldDesc o, size_t *lenp)
 {
-	return nbuf_get_str(&o->o, 0, lenp);
+	return nbuf_get_str(&o.o, 0, lenp);
 }
 
 static inline void
-nbuf_FieldDesc_set_name(const nbuf_FieldDesc *o, const char * v, size_t len)
+nbuf_FieldDesc_set_name(nbuf_FieldDesc o, const char * v, size_t len)
 {
-	return nbuf_put_str(&o->o, 0, v, len);
+	return nbuf_put_str(&o.o, 0, v, len);
 }
 
 static inline nbuf_Kind
-nbuf_FieldDesc_kind(const nbuf_FieldDesc *o)
+nbuf_FieldDesc_kind(nbuf_FieldDesc o)
 {
-	return (nbuf_Kind) nbuf_get_int(&o->o, 0, 2);
+	return (nbuf_Kind) nbuf_get_int(&o.o, 0, 2);
 }
 
 static inline void
-nbuf_FieldDesc_set_kind(const nbuf_FieldDesc *o, nbuf_Kind v)
+nbuf_FieldDesc_set_kind(nbuf_FieldDesc o, nbuf_Kind v)
 {
-	return nbuf_put_int(&o->o, 0, 2, (uint16_t) v);
+	return nbuf_put_int(&o.o, 0, 2, (uint16_t) v);
 }
 
 static inline bool
-nbuf_FieldDesc_list(const nbuf_FieldDesc *o)
+nbuf_FieldDesc_list(nbuf_FieldDesc o)
 {
-	return nbuf_get_bit(&o->o, 16);
+	return nbuf_get_bit(&o.o, 16);
 }
 
 static inline void
-nbuf_FieldDesc_set_list(const nbuf_FieldDesc *o, bool v)
+nbuf_FieldDesc_set_list(nbuf_FieldDesc o, bool v)
 {
-	return nbuf_put_bit(&o->o, 16, v);
+	return nbuf_put_bit(&o.o, 16, v);
 }
 
 static inline uint32_t
-nbuf_FieldDesc_tag0(const nbuf_FieldDesc *o)
+nbuf_FieldDesc_tag0(nbuf_FieldDesc o)
 {
-	return nbuf_get_int(&o->o, 4, 4);
+	return nbuf_get_int(&o.o, 4, 4);
 }
 
 static inline void
-nbuf_FieldDesc_set_tag0(const nbuf_FieldDesc *o, uint32_t v)
+nbuf_FieldDesc_set_tag0(nbuf_FieldDesc o, uint32_t v)
 {
-	return nbuf_put_int(&o->o, 4, 4, v);
+	return nbuf_put_int(&o.o, 4, 4, v);
 }
 
 static inline uint32_t
-nbuf_FieldDesc_tag1(const nbuf_FieldDesc *o)
+nbuf_FieldDesc_tag1(nbuf_FieldDesc o)
 {
-	return nbuf_get_int(&o->o, 8, 4);
+	return nbuf_get_int(&o.o, 8, 4);
 }
 
 static inline void
-nbuf_FieldDesc_set_tag1(const nbuf_FieldDesc *o, uint32_t v)
+nbuf_FieldDesc_set_tag1(nbuf_FieldDesc o, uint32_t v)
 {
-	return nbuf_put_int(&o->o, 8, 4, v);
+	return nbuf_put_int(&o.o, 8, 4, v);
 }
 
 static inline const char *
-nbuf_MsgType_name(const nbuf_MsgType *o, size_t *lenp)
+nbuf_MsgType_name(nbuf_MsgType o, size_t *lenp)
 {
-	return nbuf_get_str(&o->o, 0, lenp);
+	return nbuf_get_str(&o.o, 0, lenp);
 }
 
 static inline void
-nbuf_MsgType_set_name(const nbuf_MsgType *o, const char * v, size_t len)
+nbuf_MsgType_set_name(nbuf_MsgType o, const char * v, size_t len)
 {
-	return nbuf_put_str(&o->o, 0, v, len);
+	return nbuf_put_str(&o.o, 0, v, len);
 }
 
 static inline nbuf_FieldDesc
-nbuf_MsgType_fields(const nbuf_MsgType *o, size_t i)
+nbuf_MsgType_fields(nbuf_MsgType o, size_t i)
 {
-	nbuf_FieldDesc oo;
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 1);
-	t = nbuf_get_elem(&t, i);
-	oo.o = t;
-	return oo;
+	o.o = nbuf_get_ptr(&o.o, 1);
+	o.o = nbuf_get_elem(&o.o, i);
+	return (nbuf_FieldDesc) {o.o};
 }
 
 static inline size_t
-nbuf_MsgType_fields_size(const nbuf_MsgType *o)
+nbuf_MsgType_fields_size(nbuf_MsgType o)
 {
-	struct nbuf_obj t = nbuf_get_ptr(&o->o, 1);
-	return t.nelem;
+	return nbuf_get_ptr(&o.o, 1).nelem;
 }
 
 static inline void
-nbuf_MsgType_init_fields(const nbuf_MsgType *o, size_t n)
+nbuf_MsgType_init_fields(nbuf_MsgType o, size_t n)
 {
-	struct nbuf_obj oo = nbuf_create(o->o.buf, n, 12, 1);
-	nbuf_put_ptr(&o->o, 1, oo);
+	struct nbuf_obj oo = nbuf_create(o.o.buf, n, 12, 1);
+	nbuf_put_ptr(&o.o, 1, oo);
 }
 
 static inline bool
-nbuf_MsgType_has_fields(const nbuf_MsgType *o)
+nbuf_MsgType_has_fields(nbuf_MsgType o)
 {
-	return nbuf_has_ptr(&o->o, 1);
+	return nbuf_has_ptr(&o.o, 1);
 }
 
 static inline uint16_t
-nbuf_MsgType_ssize(const nbuf_MsgType *o)
+nbuf_MsgType_ssize(nbuf_MsgType o)
 {
-	return nbuf_get_int(&o->o, 0, 2);
+	return nbuf_get_int(&o.o, 0, 2);
 }
 
 static inline void
-nbuf_MsgType_set_ssize(const nbuf_MsgType *o, uint16_t v)
+nbuf_MsgType_set_ssize(nbuf_MsgType o, uint16_t v)
 {
-	return nbuf_put_int(&o->o, 0, 2, v);
+	return nbuf_put_int(&o.o, 0, 2, v);
 }
 
 static inline uint16_t
-nbuf_MsgType_psize(const nbuf_MsgType *o)
+nbuf_MsgType_psize(nbuf_MsgType o)
 {
-	return nbuf_get_int(&o->o, 2, 2);
+	return nbuf_get_int(&o.o, 2, 2);
 }
 
 static inline void
-nbuf_MsgType_set_psize(const nbuf_MsgType *o, uint16_t v)
+nbuf_MsgType_set_psize(nbuf_MsgType o, uint16_t v)
 {
-	return nbuf_put_int(&o->o, 2, 2, v);
+	return nbuf_put_int(&o.o, 2, 2, v);
 }
 
 extern nbuf_EnumType
