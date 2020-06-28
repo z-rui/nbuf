@@ -77,8 +77,7 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 	nbuf_MsgType rootType;
 
 	if (rootTypeName) {
-		if (!nbuf_Schema_msgType_by_name(&rootType,
-				&schema, rootTypeName))
+		if (!nbuf_Schema_msgType_by_name(&rootType, schema, rootTypeName))
 			die("no message named \"%s\" defined in schema",
 				rootTypeName);
 	} else if (nbuf_Schema_msgTypes_size(schema) > 0) {
@@ -94,12 +93,12 @@ enc_dec(struct nbuf_buffer *schema_buf, int mode, const char *rootTypeName)
 #endif
 		nbuf_load_file(&obj_buf, stdin);
 		nbuf_obj_init(&o, 0);
-		nbuf_print(&o, stdout, 2, &schema, &rootType);
+		nbuf_print(&o, stdout, 2, schema, &rootType);
 	} else {
 		struct nbuf_lexer l;
 		nbuf_lex_init(&l, stdin);
 		nbuf_init_write(&obj_buf, NULL, 0);
-		nbuf_parse(&obj_buf, &l, &schema, &rootType);
+		nbuf_parse(&obj_buf, &l, schema, rootType);
 		outbin(&obj_buf);
 	}
 	nbuf_free(&obj_buf);

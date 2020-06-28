@@ -7,7 +7,7 @@ struct nbuf_parser {
 	nbuf_Token token;
 	struct nbuf_pool pool;
 	struct nbuf_lexer *l;
-	nbuf_Schema *schema;
+	nbuf_Schema schema;
 };
 
 struct ref {
@@ -20,19 +20,18 @@ static bool
 getref(struct ref *ref,
 	struct nbuf_parser *p,
 	struct nbuf_obj o,
-	nbuf_MsgType *msg,
+	nbuf_MsgType msg,
 	const char *name)
 {
 	nbuf_FieldDesc fld;
-	bool ok = nbuf_MsgType_fields_by_name(&fld, msg, name);
-	if (!ok) {
+	if (!nbuf_MsgType_fields_by_name(&fld, msg, name)) {
 		p->l->error(p->l, "message %s has no field named \"%s\"",
 			nbuf_MsgType_name(msg, NULL), name);
 		return false;
 	}
-	ref->kind = nbuf_FieldDesc_kind(&fld);
-	unsigned tag0 = nbuf_FieldDesc_tag0(&fld);
-	ref->tag1 = nbuf_FieldDesc_tag1(&fld);
+	ref->kind = nbuf_FieldDesc_kind(fld);
+	unsigned tag0 = nbuf_FieldDesc_tag0(fld);
+	ref->tag1 = nbuf_FieldDesc_tag1(fld);
 	size_t ssize = 0, psize = 0;
 	switch (ref->kind) {
 	case nbuf_Kind_ENUM:
@@ -49,12 +48,12 @@ getref(struct ref *ref,
 		break;
 	case nbuf_Kind_PTR: {
 		nbuf_MsgType msg = nbuf_Schema_msgTypes(p->schema, ref->tag1);
-		ssize = nbuf_MsgType_ssize(&msg);
-		psize = nbuf_MsgType_psize(&msg);
+		ssize = nbuf_MsgType_ssize(msg);
+		psize = nbuf_MsgType_psize(msg);
 		break;
 	}
 	}
-	bool list = nbuf_FieldDesc_list(&fld);
+	bool list = nbuf_FieldDesc_list(fld);
 	if (list || ref->kind == nbuf_Kind_PTR) {
 		size_t base = o.base + nbuf_ptr_offs(&o, tag0);
 		if (nbuf_read_int_safe(o.buf, base, NBUF_WORD_SZ) != 0) {
@@ -153,11 +152,10 @@ parse_enum(struct ref *ref, struct nbuf_parser *p, const char *field_name)
 	case nbuf_Token_ID: {
 		nbuf_EnumType etype = nbuf_Schema_enumTypes(
 			p->schema, ref->tag1);
-		v = nbuf_EnumType_name_to_value(&etype,
-			l->u.s.base);
+		v = nbuf_EnumType_name_to_value(etype, l->u.s.base);
 		if (v == (uint32_t) -1) {
 			l->error(l, "enum %s has no value %s",
-				nbuf_EnumType_name(&etype, NULL),
+				nbuf_EnumType_name(etype, NULL),
 				l->u.s.base);
 			return false;
 		}
@@ -222,7 +220,7 @@ parse_str(struct ref *ref, struct nbuf_parser *p, const char *field_name)
 }
 
 static bool
-parse_msg(struct nbuf_obj *o, struct nbuf_parser *p, nbuf_MsgType *msgType)
+parse_msg(struct nbuf_obj *o, struct nbuf_parser *p, nbuf_MsgType msgType)
 {
 	char *field_name = NULL;
 	bool ok = true;
@@ -230,8 +228,7 @@ parse_msg(struct nbuf_obj *o, struct nbuf_parser *p, nbuf_MsgType *msgType)
 	while (p->token == nbuf_Token_ID) {
 		struct ref ref;
 		field_name = steal(&p->l->u.s);
-		ok = getref(&ref, p, *o, msgType, field_name);
-		if (!ok)
+		if (!(ok = getref(&ref, p, *o, msgType, field_name)))
 			goto out;
 		NEXT;
 		if (ref.kind != nbuf_Kind_PTR)
@@ -250,8 +247,7 @@ parse_msg(struct nbuf_obj *o, struct nbuf_parser *p, nbuf_MsgType *msgType)
 			nbuf_MsgType subMsgType;
 			EXPECT('{', "missing '{' for \"%s\"", field_name);
 			subMsgType = nbuf_Schema_msgTypes(p->schema, ref.tag1);
-			ok = parse_msg(&ref.o, p, &subMsgType);
-			if (!ok)
+			if (!(ok = parse_msg(&ref.o, p, subMsgType)))
 				goto out;
 			EXPECT('}', "missing '}' for \"%s\"", field_name);
 			break;
@@ -269,7 +265,7 @@ out:
 
 bool
 nbuf_parse(struct nbuf_buffer *buf, struct nbuf_lexer *l,
-	nbuf_Schema *schema, nbuf_MsgType *msgType)
+	nbuf_Schema schema, nbuf_MsgType msgType)
 {
 	struct nbuf_parser p[1];
 	struct nbuf_obj o;

@@ -12,12 +12,12 @@ def print_hero(x):
     print("hp:", x.hp())
     print("mana:", x.mana())
     for item in x.inventory():
-        print("item: <")
-        print(" name:", repr(item.name()))
-        print(" quantity:", item.quantity())
-        print(" buc:", item.buc())
-        print(" corroded:", item.corroded())
-        print(" enchantment:", item.enchantment())
+        print("inventory <")
+        print("  name:", repr(item.name()))
+        print("  quantity:", item.quantity())
+        print("  buc:", item.buc())
+        print("  corroded:", item.corroded())
+        print("  enchantment:", item.enchantment())
         print(">")
 
 def load(buf):

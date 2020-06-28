@@ -11,31 +11,22 @@ extern "C" {
 #endif
 
 extern const char *
-nbuf_EnumType_value_to_name(nbuf_EnumType *enm, uint16_t val);
+nbuf_EnumType_value_to_name(nbuf_EnumType enm, uint16_t val);
 extern uint32_t
-nbuf_EnumType_name_to_value(nbuf_EnumType *enm, const char *name);
+nbuf_EnumType_name_to_value(nbuf_EnumType enm, const char *name);
 
 extern bool
-nbuf_Schema_msgType_by_name(
-	nbuf_MsgType *msg,
-	nbuf_Schema *schema,
-	const char *name);
+nbuf_Schema_msgType_by_name(nbuf_MsgType *msg, nbuf_Schema schema, const char *name);
 
 extern bool
-nbuf_Schema_enumType_by_name(
-	nbuf_EnumType *enm,
-	nbuf_Schema *schema,
-	const char *name);
+nbuf_Schema_enumType_by_name(nbuf_EnumType *enm, nbuf_Schema schema, const char *name);
 
 extern bool
-nbuf_MsgType_fields_by_name(
-	nbuf_FieldDesc *fld,
-	nbuf_MsgType *msg,
-	const char *name);
+nbuf_MsgType_fields_by_name(nbuf_FieldDesc *fld, nbuf_MsgType msg, const char *name);
 
 extern int
 nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
-	nbuf_Schema *schema, nbuf_MsgType *msgType);
+	nbuf_Schema schema, nbuf_MsgType *msgType);
 
 extern bool
 nbuf_load_file(struct nbuf_buffer *buf, FILE *fin);
@@ -111,7 +102,7 @@ nbuf_lex(struct nbuf_lexer *l);
 
 extern bool
 nbuf_parse(struct nbuf_buffer *buf, struct nbuf_lexer *l,
-	nbuf_Schema *schema, nbuf_MsgType *msgType);
+	nbuf_Schema schema, nbuf_MsgType msgType);
 
 #ifdef __cplusplus
 }

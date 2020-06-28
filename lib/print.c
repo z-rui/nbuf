@@ -8,7 +8,7 @@
 
 struct ctx {
 	FILE *fout;
-	nbuf_Schema *schema;
+	nbuf_Schema schema;
 	int indent;
 	int indent_inc;
 };
@@ -90,9 +90,9 @@ do_print_notype(struct ctx *ctx, struct nbuf_obj *o)
 static struct nbuf_obj
 subobj(struct nbuf_obj *o, nbuf_FieldDesc fld)
 {
-	nbuf_Kind kind = nbuf_FieldDesc_kind(&fld);
-	unsigned tag0 = nbuf_FieldDesc_tag0(&fld);
-	unsigned tag1 = nbuf_FieldDesc_tag1(&fld);
+	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
+	unsigned tag0 = nbuf_FieldDesc_tag0(fld);
+	unsigned tag1 = nbuf_FieldDesc_tag1(fld);
 	struct nbuf_obj oo;
 
 	oo.buf = o->buf;
@@ -124,7 +124,7 @@ subobj(struct nbuf_obj *o, nbuf_FieldDesc fld)
 }
 
 static int
-do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
+do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType msgType)
 {
 	int nwrite = 0;
 	size_t i, j, n;
@@ -142,11 +142,11 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 		size_t len;
 
 		fld = nbuf_MsgType_fields(msgType, i);
-		fname = nbuf_FieldDesc_name(&fld, NULL);
-		kind = nbuf_FieldDesc_kind(&fld);
-		tag0 = nbuf_FieldDesc_tag0(&fld);
-		tag1 = nbuf_FieldDesc_tag1(&fld);
-		if (nbuf_FieldDesc_list(&fld) || kind == nbuf_Kind_PTR) {
+		fname = nbuf_FieldDesc_name(fld, NULL);
+		kind = nbuf_FieldDesc_kind(fld);
+		tag0 = nbuf_FieldDesc_tag0(fld);
+		tag1 = nbuf_FieldDesc_tag1(fld);
+		if (nbuf_FieldDesc_list(fld) || kind == nbuf_Kind_PTR) {
 			oo = nbuf_get_ptr(o, tag0);
 			if (kind == nbuf_Kind_BOOL)
 				oo.ssize = 1;
@@ -204,13 +204,13 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 			case nbuf_Kind_ENUM:
 				nwrite += fprintf(ctx->fout, "%s",
 					nbuf_EnumType_value_to_name(
-						&fldEnumType,
+						fldEnumType,
 						nbuf_get_int(&oo, tag0, 2)));
 				break;
 			case nbuf_Kind_PTR:
 				nwrite += fprintf(ctx->fout, "{%c", nl);
 				ctx->indent += ctx->indent_inc;
-				nwrite += do_print(ctx, &oo, &fldMsgType);
+				nwrite += do_print(ctx, &oo, fldMsgType);
 				ctx->indent -= ctx->indent_inc;
 				nwrite += do_indent(ctx->indent, ctx->fout);
 				nwrite += fprintf(ctx->fout, "}");
@@ -227,7 +227,7 @@ do_print(struct ctx *ctx, struct nbuf_obj *o, nbuf_MsgType *msgType)
 
 int
 nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
-	nbuf_Schema *schema, nbuf_MsgType *msgType)
+	nbuf_Schema schema, nbuf_MsgType *msgType)
 {
 	struct ctx ctx;
 
@@ -236,6 +236,6 @@ nbuf_print(struct nbuf_obj *o, FILE *fout, int indent,
 	ctx.indent = 0;
 	ctx.indent_inc = indent;
 	return msgType
-		? do_print(&ctx, o, msgType)
+		? do_print(&ctx, o, *msgType)
 		: do_print_notype(&ctx, o);
 }
