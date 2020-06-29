@@ -59,7 +59,6 @@ nbuf_ref_get_int(struct nbuf_ref ref)
 {
 	uint32_t sz = (ref.kind == nbuf_Kind_ENUM) ? 2 : ref.tag1;
 	int64_t v;
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_INT || ref.kind == nbuf_Kind_UINT || ref.kind == nbuf_Kind_ENUM);
 	v = nbuf_get_int(&ref.o, ref.tag0, sz);
 	if (ref.kind == nbuf_Kind_UINT)
@@ -71,7 +70,6 @@ static inline void
 nbuf_ref_put_int(struct nbuf_ref ref, int64_t v)
 {
 	uint32_t sz = (ref.kind == nbuf_Kind_ENUM) ? 2 : ref.tag1;
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_INT || ref.kind == nbuf_Kind_UINT || ref.kind == nbuf_Kind_ENUM);
 	nbuf_put_int(&ref.o, ref.tag0, sz, v);
 }
@@ -79,7 +77,6 @@ nbuf_ref_put_int(struct nbuf_ref ref, int64_t v)
 static inline double
 nbuf_ref_get_float(struct nbuf_ref ref)
 {
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_FLOAT);
 	switch (ref.tag1) {
 	case 4: return nbuf_get_f32(&ref.o, ref.tag0);
@@ -92,7 +89,6 @@ nbuf_ref_get_float(struct nbuf_ref ref)
 static inline void
 nbuf_ref_put_float(struct nbuf_ref ref, double v)
 {
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_FLOAT);
 	switch (ref.tag1) {
 	case 4: nbuf_put_f32(&ref.o, ref.tag0, v); break;
@@ -104,7 +100,6 @@ nbuf_ref_put_float(struct nbuf_ref ref, double v)
 static inline bool
 nbuf_ref_get_bit(struct nbuf_ref ref)
 {
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_BOOL);
 	return nbuf_get_bit(&ref.o, ref.tag0);
 }
@@ -112,7 +107,6 @@ nbuf_ref_get_bit(struct nbuf_ref ref)
 static inline void
 nbuf_ref_put_bit(struct nbuf_ref ref, bool v)
 {
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_BOOL);
 	return nbuf_put_bit(&ref.o, ref.tag0, v);
 }
@@ -120,7 +114,6 @@ nbuf_ref_put_bit(struct nbuf_ref ref, bool v)
 static inline const char *
 nbuf_ref_get_str(struct nbuf_ref ref, size_t *lenp)
 {
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_STR);
 	return nbuf_get_str(&ref.o, ref.tag0, lenp);
 }
@@ -128,7 +121,6 @@ nbuf_ref_get_str(struct nbuf_ref ref, size_t *lenp)
 static inline void
 nbuf_ref_put_str(struct nbuf_ref ref, const char *v, size_t len)
 {
-	assert(!ref.list);
 	assert(ref.kind == nbuf_Kind_STR);
 	return nbuf_put_str(&ref.o, ref.tag0, v, len);
 }
