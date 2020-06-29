@@ -300,7 +300,7 @@ nbuf_b2h(struct nbuf_buffer *buf, FILE *fout, const char *srcname)
 	struct nbuf_b2h ctx[1];
 
 	ctx->schema = nbuf_get_Schema(buf);
-	makeprefix(ctx, srcname, "_H");
+	makeprefix(ctx, srcname, "_", "_H");
 	outhdr(ctx, fout, srcname);
 	genenums(ctx, fout);
 	genmsgs(ctx, fout);

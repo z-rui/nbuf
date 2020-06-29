@@ -5,7 +5,7 @@
 
 struct nbuf_parser {
 	nbuf_Token token;
-	struct nbuf_pool pool;
+	struct nbuf_buffer *buf;  /* builder buffer */
 	struct nbuf_lexer *l;
 	nbuf_Schema schema;
 };
@@ -57,11 +57,11 @@ getref(struct ref *ref,
 	if (list || ref->kind == nbuf_Kind_PTR) {
 		size_t base = o.base + nbuf_ptr_offs(&o, tag0);
 		if (nbuf_read_int_safe(o.buf, base, NBUF_WORD_SZ) != 0) {
-			o = nbuf_get_pool_ptr(&p->pool, &o, tag0);
+			o = nbuf_get_ptr(&o, tag0);
 		} else {
-			struct nbuf_obj oo = nbuf_pool_create(&p->pool,
+			struct nbuf_obj oo = nbuf_create(p->buf,
 				(list) ? 0 : 1, ssize, psize);
-			nbuf_put_pool_ptr(&p->pool, &o, tag0, oo);
+			nbuf_put_ptr(&o, tag0, oo);
 			o = oo;
 		}
 		ref->offs = 0;
@@ -211,9 +211,9 @@ static bool
 parse_str(struct ref *ref, struct nbuf_parser *p, const char *field_name)
 {
 	size_t len = p->l->u.s.len;
-	struct nbuf_obj o = nbuf_pool_create(&p->pool, len, 1, 0);
+	struct nbuf_obj o = nbuf_create(p->buf, len, 1, 0);
 	memcpy(o.buf->base + o.base, p->l->u.s.base, len);
-	nbuf_put_pool_ptr(&p->pool, &ref->o, ref->offs, o);
+	nbuf_put_ptr(&ref->o, ref->offs, o);
 	free_tok(p);
 	NEXT;
 	return true;
@@ -272,7 +272,9 @@ nbuf_parse(struct nbuf_buffer *buf, struct nbuf_lexer *l,
 	bool ok;
 
 	memset(p, 0, sizeof p);
-	o = nbuf_pool_create(&p->pool, 1,
+	p->buf = buf;
+	nbuf_init_builder(buf, 1);
+	o = nbuf_create(buf, 1,
 		nbuf_MsgType_ssize(msgType),
 		nbuf_MsgType_psize(msgType));
 	p->l = l;
@@ -284,8 +286,7 @@ nbuf_parse(struct nbuf_buffer *buf, struct nbuf_lexer *l,
 		ok = false;
 		free_tok(p);
 	}
-	nbuf_pool_serialize(buf, &p->pool);
-	nbuf_pool_free(&p->pool);
+	nbuf_serialize(buf);
 	return ok;
 }
 

@@ -41,6 +41,13 @@ nbuf_read_int_unsafe(const void *ptr, size_t sz)
 struct nbuf_buffer {
 	char *base;
 	size_t len, cap;
+	struct nbuf_ops *ops;
+};
+
+struct nbuf_ops {
+	struct nbuf_obj (*create)(struct nbuf_buffer *, uint32_t, uint16_t, uint16_t);
+	struct nbuf_obj (*get_ptr)(const struct nbuf_obj *, size_t);
+	void (*put_ptr)(const struct nbuf_obj *, size_t, struct nbuf_obj);
 };
 
 static inline void
@@ -49,6 +56,7 @@ nbuf_init_read(struct nbuf_buffer *buf, const void *base, size_t size)
 	buf->base = (char *) base;
 	buf->len = size;
 	buf->cap = 0;  // for assert to catch writing to read buffers
+	buf->ops = NULL;
 }
 
 static inline bool
@@ -57,6 +65,7 @@ nbuf_init_write(struct nbuf_buffer *buf, const void *base, size_t size)
 	buf->base = (char *) ((base) ? base : (size) ? malloc(size) : NULL);
 	buf->len = 0;
 	buf->cap = size;
+	buf->ops = NULL;
 	return buf->base != NULL;
 }
 
@@ -137,6 +146,13 @@ nbuf_elemsz(const struct nbuf_obj *r)
 	return nbuf_ptr_offs(r, r->psize);
 }
 
+static inline size_t
+nbuf_totalsz(const struct nbuf_obj *r)
+{
+	size_t elemsz = nbuf_elemsz(r);
+	return (elemsz) ? elemsz * r->nelem : (r->nelem + 7) / 8;
+}
+
 static inline void
 nbuf_obj_init(
 	struct nbuf_obj *rr, /* in: buf, out: others */
@@ -204,13 +220,23 @@ nbuf_has_ptr(const struct nbuf_obj *r, size_t i)
 }
 
 static inline struct nbuf_obj
-nbuf_get_ptr(const struct nbuf_obj *r, size_t i)
+_nbuf_get_ptr(const struct nbuf_obj *r, size_t i)
 {
 	struct nbuf_obj rr = {r->buf};
 	size_t ptr_base = nbuf_get_ptr_base(r, i);
 	if (ptr_base < r->buf->len)
 		nbuf_obj_init(&rr, ptr_base);
 	return rr;
+}
+
+static inline struct nbuf_obj
+nbuf_get_ptr(const struct nbuf_obj *r, size_t i)
+{
+#ifndef NBUF_NO_POLYMORPHISM
+	if (r->buf->ops)
+		return r->buf->ops->get_ptr(r, i);
+#endif
+	return _nbuf_get_ptr(r, i);
 }
 
 static inline int64_t
@@ -298,7 +324,7 @@ nbuf_write_int_safe(
  * return a safe value.
  */
 static inline struct nbuf_obj
-nbuf_create(struct nbuf_buffer *buf,
+_nbuf_create(struct nbuf_buffer *buf,
 	uint32_t nelem,
 	uint16_t ssize,
 	uint16_t psize) {
@@ -335,6 +361,16 @@ nbuf_create(struct nbuf_buffer *buf,
 	rr.base += sizeof hdr;
 	memset(buf->base + rr.base, 0, totalsz - sizeof hdr);
 	return rr;
+}
+
+static inline struct nbuf_obj
+nbuf_create(struct nbuf_buffer *buf,
+	uint32_t nelem,
+	uint16_t ssize,
+	uint16_t psize) {
+	if (buf->ops)
+		return buf->ops->create(buf, nelem, ssize, psize);
+	return _nbuf_create(buf, nelem, ssize, psize);
 }
 
 static inline void
@@ -410,8 +446,9 @@ nbuf_put_bit(const struct nbuf_obj *r, size_t bit_offset, bool value)
 }
 
 static inline void
-nbuf_put_ptr(const struct nbuf_obj *r, size_t i, struct nbuf_obj v)
+_nbuf_put_ptr(const struct nbuf_obj *r, size_t i, struct nbuf_obj v)
 {
+	assert(r->buf == v.buf);
 	if (i >= r->psize)
 		return;
 	size_t ptr_base = r->base + nbuf_ptr_offs(r, i);
@@ -420,6 +457,14 @@ nbuf_put_ptr(const struct nbuf_obj *r, size_t i, struct nbuf_obj v)
 	int64_t rel = hdr_base - ptr_base;
 	assert(rel > 0 && rel % NBUF_WORD_SZ == 0);
 	nbuf_write_int_safe(r->buf, ptr_base, NBUF_WORD_SZ, rel / NBUF_WORD_SZ);
+}
+
+static inline void
+nbuf_put_ptr(const struct nbuf_obj *r, size_t i, struct nbuf_obj v)
+{
+	if (r->buf->ops)
+		return r->buf->ops->put_ptr(r, i, v);
+	return _nbuf_put_ptr(r, i, v);
 }
 
 static inline void

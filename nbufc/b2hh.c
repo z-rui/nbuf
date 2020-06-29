@@ -65,19 +65,18 @@ gengetter(struct nbuf_b2h *ctx, FILE *fout,
 	uint32_t tag1 = nbuf_FieldDesc_tag1(fld);
 	const char *typ = typestr(ctx, kind, tag1);
 	const char *o = "this";
-	bool need_comma = false;
+	const char *comma = "";
 
 	outfnhdr(fout, typ, mname, "", fname, definition);
 	fprintf(fout, "(");
 	if (list) {
 		fprintf(fout, "size_t i");
-		need_comma = true;
+		comma = ", ";
 	}
 	if (kind == nbuf_Kind_STR) {
 		fprintf(fout, "%ssize_t *lenp%s",
-			need_comma ? ", " : "",
-			definition ? "" : " = NULL");
-		need_comma = true;
+			comma, definition ? "" : " = NULL");
+		comma = ", ";
 	}
 	fprintf(fout, ") const%s\n",
 		definition ? "\n{" : ";");
@@ -122,9 +121,9 @@ gengetter(struct nbuf_b2h *ctx, FILE *fout,
 	case nbuf_Kind_PTR:
 		if (!list)
 			fprintf(fout, "\treturn "
-				"Item(nbuf_get_ptr(this, %u));\n", tag0);
+				"%s(nbuf_get_ptr(this, %u));\n", typ, tag0);
 		else
-			fprintf(fout, "\treturn Item(t);\n");
+			fprintf(fout, "\treturn %s(t);\n", typ);
 		break;
 	default:
 		assert(0 && "bad kind");
@@ -377,7 +376,7 @@ nbuf_b2hh(struct nbuf_buffer *buf, FILE *fout, const char *srcname)
 	struct nbuf_b2h ctx[1];
 
 	ctx->schema = nbuf_get_Schema(buf);
-	makeprefix(ctx, srcname, "_HPP");
+	makeprefix(ctx, srcname, "", "_HPP");
 	outhdr(ctx, fout, srcname);
 	genenums(ctx, fout);
 	genmsgs(ctx, fout);

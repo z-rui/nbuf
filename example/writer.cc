@@ -1,3 +1,4 @@
+#include "libnbuf.h"
 #include "my_game.nb.hpp"
 
 #include <assert.h>
@@ -45,7 +46,9 @@ main()
 {
 	struct nbuf_buffer buf = {NULL};
 
+	// nbuf_init_builder(&buf, 0);
 	save(&buf); /* write something into the buffer */
+	// nbuf_serialize(&buf);
 	dump(&buf); /* show the buffer content */
 	nbuf_free(&buf);
 }

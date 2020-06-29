@@ -79,7 +79,7 @@ getsizeinfo(struct nbuf_b2h *ctx, nbuf_Kind kind, uint32_t tag1)
 }
 
 static inline void
-makeprefix(struct nbuf_b2h *ctx, const char *srcname, const char *suffix)
+makeprefix(struct nbuf_b2h *ctx, const char *srcname, const char *prefix_suffix, const char *guard_suffix)
 {
 	size_t i, len;
 	const char *pkgName = nbuf_Schema_pkgName(ctx->schema, &len);
@@ -89,18 +89,18 @@ makeprefix(struct nbuf_b2h *ctx, const char *srcname, const char *suffix)
 		ctx->prefix = strdup("");
 		len = strlen(srcname);
 		/* file.nb => FILE_NB_H */
-		ctx->guard = malloc(len + strlen(suffix) + 1);
+		ctx->guard = malloc(len + strlen(guard_suffix) + 1);
 		for (i = 0; i < len; i++) {
 			ch = srcname[i];
 			if (!isalnum(ch))
 				ch = '_';
 			ctx->guard[i] = toupper(ch);
 		}
-		strcpy(ctx->guard + len, suffix);
+		strcpy(ctx->guard + len, guard_suffix);
 	} else {
 		/* pkg.name => pkg_name_, PKG_NAME_NB_H */
 		ctx->prefix = malloc(len + 2);
-		ctx->guard = malloc(len + 3 + strlen(suffix));
+		ctx->guard = malloc(len + strlen(guard_suffix) + 3);
 		for (i = 0; i < len; i++) {
 			ch = pkgName[i];
 			if (!isalnum(ch))
@@ -108,9 +108,9 @@ makeprefix(struct nbuf_b2h *ctx, const char *srcname, const char *suffix)
 			ctx->prefix[i] = ch;
 			ctx->guard[i] = toupper(ch);
 		}
-		strcpy(ctx->prefix + len, "_");
+		strcpy(ctx->prefix + len, prefix_suffix);
 		strcpy(ctx->guard + len, "_NB");
-		strcpy(ctx->guard + len + 3, suffix);
+		strcpy(ctx->guard + len + 3, guard_suffix);
 	}
 }
 
