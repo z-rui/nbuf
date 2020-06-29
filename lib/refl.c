@@ -89,3 +89,35 @@ nbuf_find_field(nbuf_FieldDesc *fld, nbuf_MsgType msg, const char *name)
 	}
 	return false;
 }
+
+extern void
+_nbuf_get_size(struct nbuf_obj *o, nbuf_Schema schema, nbuf_Kind kind, uint32_t tag1)
+{
+	nbuf_MsgType msg;
+
+	switch (kind) {
+	case nbuf_Kind_ENUM:
+		o->ssize = 2;
+		o->psize = 0;
+		break;
+	case nbuf_Kind_BOOL:
+	case nbuf_Kind_INT:
+	case nbuf_Kind_UINT:
+	case nbuf_Kind_FLOAT:
+		o->ssize = tag1;
+		o->psize = 0;
+		break;
+	case nbuf_Kind_STR:
+		o->ssize = 0;
+		o->psize = 1;
+		break;
+	case nbuf_Kind_PTR:
+		msg = nbuf_Schema_msgTypes(schema, tag1);
+		o->ssize = nbuf_MsgType_ssize(msg);
+		o->psize = nbuf_MsgType_psize(msg);
+		break;
+	default:
+		assert(0 && "bad kind");
+		break;
+	}
+}

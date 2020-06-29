@@ -1,6 +1,7 @@
 /* Generate C++ header from binary schema. */
 
 #include "b2h_common.h"
+#include "libnbuf.h"
 #include "libnbufc.h"
 
 #include <assert.h>
@@ -228,7 +229,7 @@ geniniter(struct nbuf_b2h *ctx, FILE *fout,
 		definition ? "\n{" : ";");
 	if (!definition)
 		return;
-	o = getsizeinfo(ctx, kind, tag1);
+	_nbuf_get_size(&o, ctx->schema, kind, tag1);
 	fprintf(fout, "\tnbuf_obj oo = nbuf_create(buf, %s, %u, %u);\n",
 		list ? "n" : "1", o.ssize, o.psize);
 	fprintf(fout, "\tnbuf_put_ptr(this, %u, oo);\n", tag0);

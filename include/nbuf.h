@@ -202,30 +202,31 @@ nbuf_get_elem(const struct nbuf_obj *r, size_t i)
 }
 
 static inline size_t
-nbuf_get_ptr_base(const struct nbuf_obj *r, size_t i)
+nbuf_get_rel_ptr(const struct nbuf_obj *r, size_t i)
 {
-	size_t base = r->base + nbuf_ptr_offs(r, i);
-	if (i < r->psize) {
-		int64_t rel = nbuf_read_int_safe(r->buf, base, NBUF_WORD_SZ);
-		if (rel > 0)
-			return base + rel * NBUF_WORD_SZ;
-	}
-	return r->buf->len;
+	if (i >= r->psize)
+		return 0;
+	return nbuf_read_int_safe(r->buf,
+		r->base + nbuf_ptr_offs(r, i),
+		NBUF_WORD_SZ);
 }
 
 static inline bool
 nbuf_has_ptr(const struct nbuf_obj *r, size_t i)
 {
-	return nbuf_get_ptr_base(r, i) < r->buf->len;
+	return nbuf_get_rel_ptr(r, i) != 0;
 }
 
 static inline struct nbuf_obj
 _nbuf_get_ptr(const struct nbuf_obj *r, size_t i)
 {
 	struct nbuf_obj rr = {r->buf};
-	size_t ptr_base = nbuf_get_ptr_base(r, i);
-	if (ptr_base < r->buf->len)
-		nbuf_obj_init(&rr, ptr_base);
+	size_t base = nbuf_get_rel_ptr(r, i) * NBUF_WORD_SZ;
+	if (base) {
+		base += r->base + nbuf_ptr_offs(r, i);
+		if (base < r->buf->len)
+			nbuf_obj_init(&rr, base);
+	}
 	return rr;
 }
 

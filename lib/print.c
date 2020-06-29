@@ -87,138 +87,73 @@ do_print_notype(struct ctx *ctx, const struct nbuf_obj *o)
 	return nwrite;
 }
 
-static struct nbuf_obj
-subobj(const struct nbuf_obj *o, nbuf_FieldDesc fld)
-{
-	nbuf_Kind kind = nbuf_FieldDesc_kind(fld);
-	unsigned tag0 = nbuf_FieldDesc_tag0(fld);
-	unsigned tag1 = nbuf_FieldDesc_tag1(fld);
-	struct nbuf_obj oo;
-
-	oo.buf = o->buf;
-	oo.nelem = 1;
-	oo.ssize = tag1;
-	oo.psize = 0;
-	switch (kind) {
-	case nbuf_Kind_BOOL:
-		oo.base = o->base + tag0 / 8;
-		oo.ssize = 1;
-		break;
-	case nbuf_Kind_STR:
-	case nbuf_Kind_PTR:
-		oo.base = o->base + nbuf_ptr_offs(o, tag0);
-		oo.ssize = 0;
-		oo.psize = 1;
-		break;
-	case nbuf_Kind_ENUM:
-		oo.ssize = 2;
-		/** fallthrough */
-	default:
-		oo.base = o->base + tag0;
-		break;
-	}
-	if ((oo.ssize && oo.base >= o->base + o->ssize)
-		|| (oo.psize && oo.base >= o->base + nbuf_elemsz(o)))
-		oo.nelem = 0;
-	return oo;
-}
-
 static int
 do_print(struct ctx *ctx, const struct nbuf_obj *o, nbuf_MsgType msgType)
 {
 	int nwrite = 0;
-	size_t i, j, n;
+	size_t i, n;
 	char nl = (ctx->indent_inc >= 0) ? '\n' : ' ';
 
 	n = nbuf_MsgType_fields_size(msgType);
 	for (i = 0; i < n; i++) {
 		nbuf_FieldDesc fld;
-		const char *fname, *s;
-		unsigned tag0, tag1;
-		nbuf_Kind kind;
+		struct nbuf_ref ref;
+		const char *s;
 		nbuf_MsgType fldMsgType;
 		nbuf_EnumType fldEnumType;
-		struct nbuf_obj oo;
 		size_t len;
 
 		fld = nbuf_MsgType_fields(msgType, i);
-		fname = nbuf_FieldDesc_name(fld, NULL);
-		kind = nbuf_FieldDesc_kind(fld);
-		tag0 = nbuf_FieldDesc_tag0(fld);
-		tag1 = nbuf_FieldDesc_tag1(fld);
-		if (nbuf_FieldDesc_list(fld) || kind == nbuf_Kind_PTR) {
-			oo = nbuf_get_ptr(o, tag0);
-			if (kind == nbuf_Kind_BOOL)
-				oo.ssize = 1;
-			tag0 = 0;
-		} else {
-			oo = subobj(o, fld);
-			if (kind == nbuf_Kind_BOOL)
-				tag0 %= 8;
-			else
-				tag0 = 0;
+		ref = nbuf_get_ref(o, fld);
+		if (ref.list || ref.kind == nbuf_Kind_PTR) {
+			nbuf_ref_get_ptr(&ref);
+			if (ref.o.nelem == 0)
+				continue;
 		}
-		if (kind == nbuf_Kind_ENUM)
-			fldEnumType = nbuf_Schema_enumTypes(
-				ctx->schema, tag1);
-		else if (kind == nbuf_Kind_PTR)
-			fldMsgType = nbuf_Schema_msgTypes(
-				ctx->schema, tag1);
-
-		for (j = 0; j < oo.nelem; j++) {
-			if (!nbuf_bounds_check(oo.buf, oo.base, oo.ssize))
+		if (ref.kind == nbuf_Kind_ENUM)
+			fldEnumType = nbuf_Schema_enumTypes(ctx->schema, ref.tag1);
+		else if (ref.kind == nbuf_Kind_PTR)
+			fldMsgType = nbuf_Schema_msgTypes(ctx->schema, ref.tag1);
+		do {
+			if (!nbuf_bounds_check(ref.o.buf, ref.o.base, ref.o.ssize))
 				break;  /* out of bounds */
 			nwrite += do_indent(ctx->indent, ctx->fout);
-			nwrite += fprintf(ctx->fout, "%s%s", fname,
-				(kind == nbuf_Kind_PTR) ? " " : ": ");
-			switch (kind) {
+			nwrite += fprintf(ctx->fout, "%s%s",
+				nbuf_FieldDesc_name(fld, NULL),
+				(ref.kind == nbuf_Kind_PTR) ? " " : ": ");
+			switch (ref.kind) {
 			case nbuf_Kind_BOOL:
 				nwrite += fprintf(ctx->fout,
-					"%s", nbuf_get_bit(&oo, tag0)
-						? "true" : "false");
+					"%s", nbuf_ref_get_bit(ref) ? "true" : "false");
 				break;
 			case nbuf_Kind_INT:
-				nwrite += fprintf(ctx->fout,
-					"%" PRId64,
-					nbuf_get_int(&oo, tag0, tag1));
+				nwrite += fprintf(ctx->fout, "%" PRId64, nbuf_ref_get_int(ref));
 				break;
 			case nbuf_Kind_UINT:
-				nwrite += fprintf(ctx->fout,
-					"%" PRIu64,
-					nbuf_get_int(&oo, tag0, tag1)
-					& ((uint64_t) -1 >> (8*(8-tag1))));
+				nwrite += fprintf(ctx->fout, "%" PRIu64, nbuf_ref_get_int(ref));
 				break;
 			case nbuf_Kind_FLOAT:
-				nwrite += (tag1 == 4)
-					? fprintf(ctx->fout,
-						"%.*g", FLT_DIG,
-						nbuf_get_f32(&oo, tag0))
-					: fprintf(ctx->fout,
-						"%.*lg", DBL_DIG,
-						nbuf_get_f64(&oo, tag0));
+				nwrite += fprintf(ctx->fout, "%.*lg", DBL_DIG, nbuf_ref_get_float(ref));
 				break;
 			case nbuf_Kind_STR:
-				s = nbuf_get_str(&oo, 0, &len);
+				s = nbuf_ref_get_str(ref, &len);
 				nwrite += dumpstr(ctx->fout, s, len);
 				break;
 			case nbuf_Kind_ENUM:
 				nwrite += fprintf(ctx->fout, "%s",
-					nbuf_enum_name(fldEnumType, nbuf_get_int(&oo, tag0, 2)));
+					nbuf_enum_name(fldEnumType, nbuf_ref_get_int(ref)));
 				break;
 			case nbuf_Kind_PTR:
 				nwrite += fprintf(ctx->fout, "{%c", nl);
 				ctx->indent += ctx->indent_inc;
-				nwrite += do_print(ctx, &oo, fldMsgType);
+				nwrite += do_print(ctx, &ref.o, fldMsgType);
 				ctx->indent -= ctx->indent_inc;
 				nwrite += do_indent(ctx->indent, ctx->fout);
 				nwrite += fprintf(ctx->fout, "}");
 				break;
 			}
 			nwrite += fprintf(ctx->fout, "%c", nl);
-			if (kind != nbuf_Kind_BOOL ||
-					(tag0 = (tag0 + 1) % 8) == 0)
-				oo.base += nbuf_elemsz(&oo);
-		}
+		} while (ref.list && nbuf_ref_advance(&ref, 1));
 	}
 	return nwrite;
 }

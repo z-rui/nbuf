@@ -1,6 +1,7 @@
 /* Generate header from binary schema. */
 
 #include "b2h_common.h"
+#include "libnbuf.h"
 #include "libnbufc.h"
 
 #include <assert.h>
@@ -171,7 +172,7 @@ geniniter(struct nbuf_b2h *ctx, FILE *fout,
 	fprintf(fout, "\n%s%s_init_%s(%s%s o%s)\n{\n",
 		ctx->prefix, mname, fname, ctx->prefix, mname,
 		list ? ", size_t n" : "");
-	o = getsizeinfo(ctx, kind, tag1);
+	_nbuf_get_size(&o, ctx->schema, kind, tag1);
 	fprintf(fout, "\tstruct nbuf_obj oo = "
 		"nbuf_create(o.o.buf, %s, %u, %u);\n",
 		list ? "n" : "1", o.ssize, o.psize);
@@ -292,6 +293,71 @@ cleanup(struct nbuf_b2h *ctx)
 {
 	free(ctx->prefix);
 	free(ctx->guard);
+}
+
+const char *
+typestr(struct nbuf_b2h *ctx, nbuf_Kind kind, uint32_t tag1)
+{
+	switch (kind) {
+	case nbuf_Kind_BOOL:
+		return "bool";
+	case nbuf_Kind_INT:
+		sprintf(ctx->scratch, "int%d_t", tag1*8);
+		return ctx->scratch;
+	case nbuf_Kind_UINT:
+		sprintf(ctx->scratch, "uint%d_t", tag1*8);
+		return ctx->scratch;
+	case nbuf_Kind_FLOAT:
+		return (tag1 == 4) ? "float" : "double";
+	case nbuf_Kind_STR:
+		/* TODO: use std::string_view in C++ */
+		return "const char *";
+	case nbuf_Kind_ENUM:
+		return nbuf_EnumType_name(nbuf_Schema_enumTypes(ctx->schema, tag1), NULL);
+	case nbuf_Kind_PTR:
+		return nbuf_MsgType_name(nbuf_Schema_msgTypes(ctx->schema, tag1), NULL);
+	default:
+		assert(0 && "unknown kind");
+		break;
+	}
+	return NULL;
+}
+
+void
+makeprefix(struct nbuf_b2h *ctx, const char *srcname,
+	const char *prefix_suffix, const char *guard_suffix)
+{
+	size_t i, len;
+	const char *pkgName = nbuf_Schema_pkgName(ctx->schema, &len);
+	char ch;
+
+	if (len == 0) {
+		ctx->prefix = strdup("");
+		len = strlen(srcname);
+		/* file.nb => FILE_NB_H */
+		ctx->guard = malloc(len + strlen(guard_suffix) + 1);
+		for (i = 0; i < len; i++) {
+			ch = srcname[i];
+			if (!isalnum(ch))
+				ch = '_';
+			ctx->guard[i] = toupper(ch);
+		}
+		strcpy(ctx->guard + len, guard_suffix);
+	} else {
+		/* pkg.name => pkg_name_, PKG_NAME_NB_H */
+		ctx->prefix = malloc(len + 2);
+		ctx->guard = malloc(len + strlen(guard_suffix) + 3);
+		for (i = 0; i < len; i++) {
+			ch = pkgName[i];
+			if (!isalnum(ch))
+				ch = '_';
+			ctx->prefix[i] = ch;
+			ctx->guard[i] = toupper(ch);
+		}
+		strcpy(ctx->prefix + len, prefix_suffix);
+		strcpy(ctx->guard + len, "_NB");
+		strcpy(ctx->guard + len + 3, guard_suffix);
+	}
 }
 
 void
