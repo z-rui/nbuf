@@ -131,6 +131,8 @@ nbuf_ref_get_ptr(struct nbuf_ref *ref)
 	assert(ref->list || ref->kind == nbuf_Kind_PTR);
 	ref->o = nbuf_get_ptr(&ref->o, ref->tag0);
 	ref->tag0 = 0;
+	if (ref->kind == nbuf_Kind_BOOL)
+		ref->o.ssize = 1;
 }
 
 static inline bool
