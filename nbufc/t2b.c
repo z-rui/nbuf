@@ -182,7 +182,7 @@ find_padding_space(size_t size)
 	for (link = &pad_start; (p = *link); link = &p->next) {
 		offset = NBUF_ROUNDUP(p->offset, size);
 		padding = offset - p->offset;
-		if (p->size - padding >= size)
+		if (p->size >= padding + size)
 			break;
 	}
 	if (p == NULL)
@@ -199,7 +199,10 @@ find_padding_space(size_t size)
 		}
 	} else if (p->size > size) {
 		p->size -= size;
+		p->offset += size;
 	} else {
+		if (pad_link == &p->next)
+			pad_link = link;
 		*link = p->next;
 		free(p);
 	}
