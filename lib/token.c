@@ -174,27 +174,24 @@ again:
 			case '\\': ch = '\\'; break;
 			case '\'': ch = '\''; break;
 			case '"': ch = '"'; break;
-			case 'x': {
+			default:
 				n = 0;
-				ch = getc(l->fin);
-				while (isxdigit(ch) && ++n <= 2) {
-					x = x * 16 + (ch - '0');
+				if (ch == 'x') {
 					ch = getc(l->fin);
+					while (isxdigit(ch) && ++n <= 2) {
+						x = x * 16 + (ch - '0');
+						ch = getc(l->fin);
+					}
+				} else {
+					while (isodigit(ch) && ++n <= 3) {
+						x = x * 8 + (ch - '0');
+						ch = getc(l->fin);
+					}
 				}
+				ungetc(ch, l->fin);
 				if (n > 0)
 					ch = x;
 				break;
-			}
-			default: {
-				n = 0;
-				while (isodigit(ch) && ++n <= 3) {
-					x = x * 8 + (ch - '0');
-					ch = getc(l->fin);
-				}
-				if (n > 0)
-					ch = x;
-				break;
-			}
 			}
 			if (n == 0)
 				l->error(l, "bad escape sequence");
