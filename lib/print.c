@@ -133,16 +133,22 @@ do_print(struct ctx *ctx, const struct nbuf_obj *o, nbuf_MsgType msgType)
 				nwrite += fprintf(ctx->fout, "%" PRIu64, nbuf_ref_get_int(ref));
 				break;
 			case nbuf_Kind_FLOAT:
-				nwrite += fprintf(ctx->fout, "%.*lg", DBL_DIG, nbuf_ref_get_float(ref));
+				nwrite += fprintf(ctx->fout, "%.*lg",
+					ref.tag1 == 4 ? FLT_DIG : DBL_DIG, nbuf_ref_get_float(ref));
 				break;
 			case nbuf_Kind_STR:
 				s = nbuf_ref_get_str(ref, &len);
 				nwrite += dumpstr(ctx->fout, s, len);
 				break;
-			case nbuf_Kind_ENUM:
-				nwrite += fprintf(ctx->fout, "%s",
-					nbuf_enum_name(fldEnumType, nbuf_ref_get_int(ref)));
+			case nbuf_Kind_ENUM: {
+				uint16_t enum_val = nbuf_ref_get_int(ref);
+				const char *enum_name = nbuf_enum_name(fldEnumType, enum_val);
+				if (enum_name)
+					nwrite += fprintf(ctx->fout, "%s", enum_name);
+				else
+					nwrite += fprintf(ctx->fout, "%u", enum_val);
 				break;
+			}
 			case nbuf_Kind_PTR:
 				nwrite += fprintf(ctx->fout, "{%c", nl);
 				ctx->indent += ctx->indent_inc;

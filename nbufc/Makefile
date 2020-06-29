@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-I../include -Wall
-CFLAGS+=-g -O2
+CFLAGS+=-g -O2 -fPIC
 LDFLAGS+=
 AR=ar
 

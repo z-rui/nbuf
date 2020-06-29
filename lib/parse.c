@@ -91,7 +91,7 @@ parse_enum(struct nbuf_ref ref, struct nbuf_parser *p, const char *field_name)
 		break;
 	}
 	default:
-		l->error(l, "expecting enum value for \"%s\"", field_name);
+		l->error(l, "expecting enum value for \"%s\", got %s", field_name, p->token);
 		return false;
 	}
 	nbuf_ref_put_int(ref, v);
